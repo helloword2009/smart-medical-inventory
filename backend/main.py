@@ -1,6 +1,9 @@
 import datetime
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from .database import get_db_connection, init_db
@@ -26,6 +29,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount static files directory
+app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
+
+@app.get("/")
+def read_root():
+    return FileResponse(os.path.join("frontend", "index.html"))
 
 # Pydantic schema for adding a medicine
 class MedicineCreate(BaseModel):
