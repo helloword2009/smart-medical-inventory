@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE = 'http://127.0.0.1:8000/api';
+const API_BASE = 'https://smart-medical-inventory.onrender.com/api';
 
 // Global Chart Instance Tracker
 let usageTrendsChartInstance = null;
