@@ -237,6 +237,66 @@ def add_medicine(med: MedicineCreate):
         conn.close()
         raise HTTPException(status_code=400, detail=f"Database error: {str(e)}")
 
+# In-memory tracking simulation state
+tracking_state = {
+    "step": 0,
+    "max_steps": 50,
+    "start_lat": 13.7563,
+    "start_lng": 100.5018,
+    "end_lat": 15.7047,
+    "end_lng": 100.1372
+}
+
+@app.get("/api/tracking")
+def get_tracking():
+    """
+    Get simulated shipment tracking status, telemetry, and coordinates.
+    Progresses along the route from Bangkok to Nakhon Sawan with each request.
+    """
+    import random
+    
+    step = tracking_state["step"]
+    max_steps = tracking_state["max_steps"]
+    
+    # Progress fraction
+    fraction = step / max_steps
+    
+    # Linear interpolation of GPS coordinates
+    lat = tracking_state["start_lat"] + fraction * (tracking_state["end_lat"] - tracking_state["start_lat"])
+    lng = tracking_state["start_lng"] + fraction * (tracking_state["end_lng"] - tracking_state["start_lng"])
+    
+    # Temperature around 4°C (e.g., 3.5°C to 4.5°C) and Humidity around 50% (e.g., 48% to 52%)
+    temperature = round(4.0 + random.uniform(-0.5, 0.5), 1)
+    humidity = round(50.0 + random.uniform(-2.0, 2.0), 1)
+    
+    # Status progression
+    if step == 0:
+        status = "In Transit (Departed Bangkok Warehouse)"
+    elif step < max_steps:
+        status = "In Transit"
+    else:
+        status = "Delivered (Nakhon Sawan Facility)"
+        
+    # Increment step for next fetch, wrap around if already delivered
+    if tracking_state["step"] < max_steps:
+        tracking_state["step"] += 1
+    else:
+        tracking_state["step"] = 0
+        
+    return {
+        "status": status,
+        "telemetry": {
+            "temperature": temperature,
+            "humidity": humidity
+        },
+        "location": {
+            "latitude": round(lat, 5),
+            "longitude": round(lng, 5)
+        },
+        "progress": round(fraction * 100, 1)
+    }
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+

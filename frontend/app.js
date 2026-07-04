@@ -4,6 +4,12 @@ const API_BASE = 'https://smart-medical-inventory.onrender.com/api';
 // Global Chart Instance Tracker
 let usageTrendsChartInstance = null;
 
+// Leaflet Map state
+let leafletMap = null;
+let vehicleMarker = null;
+let routePolyline = null;
+let trackingInterval = null;
+
 // DOM Elements
 const inventoryTableBody = document.getElementById('inventory-table-body');
 const expiredAlertsContainer = document.getElementById('expired-alerts-container');
@@ -13,8 +19,10 @@ const searchInput = document.getElementById('search-input');
 // Navigation Tab Elements
 const tabDashboardBtn = document.getElementById('tab-dashboard-btn');
 const tabInventoryBtn = document.getElementById('tab-inventory-btn');
+const tabTrackingBtn = document.getElementById('tab-tracking-btn');
 const dashboardView = document.getElementById('dashboard-view');
 const inventoryView = document.getElementById('inventory-view');
+const mapView = document.getElementById('map-view');
 const currentViewLabel = document.getElementById('current-view-label');
 
 // Stat Counters Elements (Inventory View)
@@ -496,41 +504,63 @@ async function fetchAndRenderChart() {
     }
 }
 
-// ============================================================
-// TAB SWITCHER
-// ============================================================
-
 // Tab Switcher Logic
 function switchTab(activeTab) {
+    // Hide all views first
+    dashboardView.classList.add('hidden');
+    inventoryView.classList.add('hidden');
+    mapView.classList.add('hidden');
+
+    // Reset all tab button styles to inactive state
+    const inactiveClass = 'flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-lg transition duration-200 text-slate-500 hover:text-slate-800 hover:bg-white/50';
+    const activeClass = 'flex items-center space-x-2 px-4 py-2 text-sm font-semibold bg-white text-sky-600 border border-slate-200 shadow-sm rounded-lg transition duration-200';
+
+    tabDashboardBtn.className = inactiveClass;
+    tabInventoryBtn.className = inactiveClass;
+    tabTrackingBtn.className = inactiveClass;
+
     if (activeTab === 'dashboard') {
-        // Toggle view visibility
         dashboardView.classList.remove('hidden');
-        inventoryView.classList.add('hidden');
-
-        // Update tab button styles for Light Mode
-        tabDashboardBtn.className = 'flex items-center space-x-2 px-4 py-2 text-sm font-semibold bg-white text-sky-600 border border-slate-200 shadow-sm rounded-lg transition duration-200';
-        tabInventoryBtn.className = 'flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-lg transition duration-200 text-slate-500 hover:text-slate-800 hover:bg-white/50';
-
-        // Update label
+        tabDashboardBtn.className = activeClass;
         if (currentViewLabel) {
             currentViewLabel.textContent = 'Dashboard Overview';
         }
-
-        // Fetch live dashboard data when switching to this tab
         fetchDashboardSummary();
         fetchAndRenderChart();
+        
+        // Stop polling when not on the map view
+        if (trackingInterval) {
+            clearInterval(trackingInterval);
+            trackingInterval = null;
+        }
     } else if (activeTab === 'inventory') {
-        // Toggle view visibility
         inventoryView.classList.remove('hidden');
-        dashboardView.classList.add('hidden');
-
-        // Update tab button styles for Light Mode
-        tabInventoryBtn.className = 'flex items-center space-x-2 px-4 py-2 text-sm font-semibold bg-white text-sky-600 border border-slate-200 shadow-sm rounded-lg transition duration-200';
-        tabDashboardBtn.className = 'flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-lg transition duration-200 text-slate-500 hover:text-slate-800 hover:bg-white/50';
-
-        // Update label
+        tabInventoryBtn.className = activeClass;
         if (currentViewLabel) {
             currentViewLabel.textContent = 'Inventory Management';
+        }
+        
+        // Stop polling when not on the map view
+        if (trackingInterval) {
+            clearInterval(trackingInterval);
+            trackingInterval = null;
+        }
+    } else if (activeTab === 'tracking') {
+        mapView.classList.remove('hidden');
+        tabTrackingBtn.className = activeClass;
+        if (currentViewLabel) {
+            currentViewLabel.textContent = 'Tracking Map';
+        }
+        
+        // Initialize map & start loop
+        initTrackingMap();
+        startTrackingLoop();
+        
+        // Ensure map layout renders fully inside previously hidden container
+        if (leafletMap) {
+            setTimeout(() => {
+                leafletMap.invalidateSize();
+            }, 100);
         }
     }
 
@@ -539,9 +569,124 @@ function switchTab(activeTab) {
 }
 
 // Add event listeners for tab switching
-if (tabDashboardBtn && tabInventoryBtn) {
+if (tabDashboardBtn && tabInventoryBtn && tabTrackingBtn) {
     tabDashboardBtn.addEventListener('click', () => switchTab('dashboard'));
     tabInventoryBtn.addEventListener('click', () => switchTab('inventory'));
+    tabTrackingBtn.addEventListener('click', () => switchTab('tracking'));
+}
+
+// ============================================================
+// SHIPMENT TRACKING SIMULATION
+// ============================================================
+
+function initTrackingMap() {
+    if (leafletMap) return; // Already initialized
+
+    // Center point between Bangkok and Nakhon Sawan
+    const centerLat = (13.7563 + 15.7047) / 2;
+    const centerLng = (100.5018 + 100.1372) / 2;
+
+    leafletMap = L.map('map').setView([centerLat, centerLng], 7);
+
+    // OpenStreetMap tile layers
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(leafletMap);
+
+    const startPoint = [13.7563, 100.5018];
+    const endPoint = [15.7047, 100.1372];
+
+    // Static Warehouse Markers
+    L.marker(startPoint, {
+        icon: L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        })
+    }).addTo(leafletMap).bindPopup('<b>Bangkok Central Warehouse</b><br>Origin point.');
+
+    L.marker(endPoint, {
+        icon: L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        })
+    }).addTo(leafletMap).bindPopup('<b>Nakhon Sawan Facility</b><br>Destination facility.');
+
+    // Route path line
+    routePolyline = L.polyline([startPoint, endPoint], {
+        color: '#0284c7', // Sky-600
+        weight: 3,
+        opacity: 0.6,
+        dashArray: '5, 10'
+    }).addTo(leafletMap);
+
+    // Vehicle transport marker (Red color)
+    vehicleMarker = L.marker(startPoint, {
+        icon: L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        })
+    }).addTo(leafletMap).bindPopup('Medical Transport Vehicle (Cold Chain)');
+}
+
+function startTrackingLoop() {
+    fetchTrackingData();
+    if (trackingInterval) clearInterval(trackingInterval);
+    // Fetch every 4 seconds (within the 3-5 seconds requirement)
+    trackingInterval = setInterval(fetchTrackingData, 4000);
+}
+
+async function fetchTrackingData() {
+    try {
+        const response = await fetch('/api/tracking');
+        if (!response.ok) throw new Error('Failed to fetch tracking data');
+        const data = await response.json();
+
+        // Update IoT Details on UI
+        const statusEl = document.getElementById('tracking-status');
+        const tempEl = document.getElementById('tracking-temp');
+        const humEl = document.getElementById('tracking-humidity');
+        const latEl = document.getElementById('tracking-lat');
+        const lngEl = document.getElementById('tracking-lng');
+        const progressPctEl = document.getElementById('tracking-progress-pct');
+        const progressBarEl = document.getElementById('tracking-progress-bar');
+
+        if (statusEl) statusEl.textContent = data.status;
+        if (tempEl) tempEl.textContent = `${data.telemetry.temperature}°C`;
+        if (humEl) humEl.textContent = `${data.telemetry.humidity}%`;
+        if (latEl) latEl.textContent = data.location.latitude.toFixed(5);
+        if (lngEl) lngEl.textContent = data.location.longitude.toFixed(5);
+        if (progressPctEl) progressPctEl.textContent = `${data.progress}%`;
+        if (progressBarEl) progressBarEl.style.width = `${data.progress}%`;
+
+        // Update Vehicle Marker position & popup content
+        if (vehicleMarker) {
+            const newPos = [data.location.latitude, data.location.longitude];
+            vehicleMarker.setLatLng(newPos);
+            vehicleMarker.setPopupContent(`
+                <div class="text-xs p-1">
+                    <p class="font-bold text-slate-800 mb-1">Cold Chain Vehicle</p>
+                    <p class="text-slate-650"><span class="font-semibold">Status:</span> ${data.status}</p>
+                    <p class="text-slate-650"><span class="font-semibold">Temp:</span> <span class="text-rose-600 font-bold">${data.telemetry.temperature}°C</span></p>
+                    <p class="text-slate-650"><span class="font-semibold">Humidity:</span> <span class="text-blue-600 font-bold">${data.telemetry.humidity}%</span></p>
+                    <p class="text-slate-650"><span class="font-semibold">Progress:</span> ${data.progress}%</p>
+                </div>
+            `);
+        }
+    } catch (error) {
+        console.error('Error fetching tracking data:', error);
+    }
 }
 
 // ============================================================
