@@ -8,7 +8,15 @@ let usageTrendsChartInstance = null;
 let leafletMap = null;
 let vehicleMarker = null;
 let routePolyline = null;
+let bkkMarker = null;
+let nswMarker = null;
 let trackingInterval = null;
+
+// Cached State Data (for fast re-rendering upon language toggle)
+let lastMedicinesData = null;
+let lastAlertsData = null;
+let lastTrackingData = null;
+let activeTabState = 'inventory'; // Default active view
 
 // DOM Elements
 const inventoryTableBody = document.getElementById('inventory-table-body');
@@ -24,6 +32,10 @@ const dashboardView = document.getElementById('dashboard-view');
 const inventoryView = document.getElementById('inventory-view');
 const mapView = document.getElementById('map-view');
 const currentViewLabel = document.getElementById('current-view-label');
+
+// Language Switcher Buttons
+const langThBtn = document.getElementById('lang-th-btn');
+const langEnBtn = document.getElementById('lang-en-btn');
 
 // Stat Counters Elements (Inventory View)
 const statTotalItems = document.getElementById('stat-total-items');
@@ -43,6 +55,367 @@ const addMedModal = document.getElementById('add-med-modal');
 const closeModalBtn = document.getElementById('close-modal-btn');
 const cancelModalBtn = document.getElementById('cancel-modal-btn');
 const addMedForm = document.getElementById('add-med-form');
+
+// ============================================================
+// INTERNATIONALIZATION (i18n) DICTIONARY & LOGIC
+// ============================================================
+
+const translations = {
+    en: {
+        nav_subtitle: "Smart Medical Inventory",
+        nav_api_connected: "API Connected",
+        tab_dashboard: "Dashboard Overview",
+        tab_inventory: "Inventory Management",
+        tab_tracking: "Tracking Map",
+        active_view_prefix: "Active View:",
+        
+        // Dashboard
+        dash_banner_title: "System Insights & Analytics",
+        dash_banner_sub: "Real-time statistics to prevent medicine expirations, optimize storage, and monitor supply chains.",
+        dash_banner_live: "Live Dashboard",
+        card_total_header: "Total",
+        dash_card1_desc: "Unique medicine types in inventory",
+        card_expired_header: "Expired",
+        dash_card2_desc: "Batches past expiry date — dispose immediately",
+        card_near_header: "Near Expiry",
+        dash_card3_desc: "Batches expiring within 90 days — prioritize usage",
+        card_prevented_header: "Saved",
+        dash_card4_desc: "Potential loss prevented via FEFO alerts",
+        chart_title: "Medicine Usage Trends",
+        chart_timeframe: "Last 6 Months",
+        chart_dataset_label: "Consumed Volume",
+        activity_title: "Recent Inventory Activities",
+        activity_view_full: "View Full History",
+        activity_sys_init: "System Initialization",
+        activity_item1_title: "New Medicine Seeded",
+        activity_item1_desc: "FastAPI backend completed initial database migration and table seed successfully.",
+        activity_item2_title: "Expiry Alert Flagged",
+        activity_item2_desc: "Paracetamol and Vitamin C batches identified as expired. Alerts generated dynamically.",
+        activity_item3_title: "FEFO Logic Active",
+        activity_item3_desc: "Medicines list retrieved in strict expiry date order from SQL backend database.",
+
+        // Inventory
+        stat_total_label: "Total Inventory Types",
+        stat_total_sub: "Unique medicine models",
+        stat_expired_label: "Critical Alerts (Expired)",
+        stat_expired_sub: "Require immediate disposal",
+        stat_near_label: "Near Expiry (< 90 Days)",
+        stat_near_sub: "Prioritize for usage (FEFO)",
+        stat_low_label: "Low Stock (< 10 Qty)",
+        stat_low_sub: "Reorder soon",
+
+        alerts_critical_title: "Critical Alerts: Expired",
+        alerts_warning_title: "Warnings: Stock & Expiry",
+        alerts_no_critical: "No active critical alerts.",
+        alerts_no_warning: "No warnings currently active.",
+        alert_expired_today: "Expired today",
+        alert_expired_days: "Expired {days} days ago",
+        alert_expired_1day: "Expired 1 day ago",
+        alert_expires_in: "Expires in {days} days",
+        alert_low_stock: "Low Stock: {qty} remaining",
+        alert_batch_label: "Batch",
+        alert_qty_label: "Qty",
+
+        search_placeholder: "Search medicine by name...",
+        btn_add_medicine: "Add Medicine",
+        table_section_title: "Live Inventory",
+        table_section_sub: "Sorted by FEFO (First-Expired, First-Out) logic",
+        legend_label: "Legend:",
+        legend_expired: "Expired",
+        legend_near_low: "Near Expiry / Low",
+        legend_normal: "Normal",
+
+        th_med_name: "Medicine Name",
+        th_batch: "Batch Number",
+        th_quantity: "Quantity",
+        th_unit_price: "Unit Price",
+        th_expiry_date: "Expiry Date",
+        th_storage: "Storage Location",
+        th_status: "Status",
+
+        table_loading: "Loading medical inventory...",
+        table_no_records: "No medicine inventory records found.",
+        table_error: "Failed to fetch inventory data. Please verify the backend API server is running on port 8000.",
+
+        status_expired: "Expired",
+        status_attention: "Attention Needed",
+        status_stable: "Stable",
+
+        storage_room_temp: "Room Temp",
+        storage_refrigerator: "Refrigerator",
+        storage_freezer: "Freezer",
+
+        days_ago: "Expired {days}d ago",
+        days_left: "{days} days left",
+
+        // Tracking Map
+        track_banner_title: "Live Cold Chain Transit Status",
+        track_banner_sub: "Real-time GPS tracking and IoT telemetry for active medicine shipments.",
+        track_banner_badge: "Active Simulation",
+        track_status_header: "Shipment Status",
+        track_route_info: "Route: Bangkok to Nakhon Sawan",
+        track_progress_label: "Progress",
+        track_temp_header: "Temp",
+        track_temp_badge: "Safe Range",
+        track_humidity_header: "Humidity",
+        track_humidity_badge: "Optimal",
+        track_coords_header: "Coordinates",
+        track_lat_label: "Latitude:",
+        track_lng_label: "Longitude:",
+
+        iot_status_in_transit: "In Transit",
+        iot_status_delivered: "Delivered",
+        iot_status_pending: "Pending",
+
+        map_bkk_title: "Bangkok Central Warehouse",
+        map_bkk_desc: "Origin point.",
+        map_nsw_title: "Nakhon Sawan Facility",
+        map_nsw_desc: "Destination facility.",
+        map_vehicle_title: "Medical Transport Vehicle (Cold Chain)",
+        map_vehicle_popup_title: "Cold Chain Vehicle",
+
+        // Modal
+        modal_title: "Add New Medicine",
+        modal_label_name: "Medicine Name",
+        modal_ph_name: "e.g. Paracetamol",
+        modal_label_batch: "Batch Number",
+        modal_ph_batch: "e.g. BA-991",
+        modal_label_qty: "Quantity",
+        modal_ph_qty: "e.g. 50",
+        modal_label_expiry: "Expiry Date",
+        modal_label_storage: "Storage Status",
+        opt_room_temp: "Room Temp",
+        opt_refrigerator: "Refrigerator",
+        opt_freezer: "Freezer",
+        modal_label_price: "Price per Unit (฿)",
+        modal_ph_price: "e.g. 12.50",
+        btn_cancel: "Cancel",
+        btn_save_medicine: "Save Medicine",
+
+        // Footer
+        footer_text: "MediKeep Prototype - High School Science & Engineering Fair 2026"
+    },
+    th: {
+        nav_subtitle: "ระบบคลังเวชภัณฑ์อัจฉริยะ",
+        nav_api_connected: "เชื่อมต่อ API แล้ว",
+        tab_dashboard: "ภาพรวมแดชบอร์ด",
+        tab_inventory: "การจัดการคลังเวชภัณฑ์",
+        tab_tracking: "แผนที่ติดตามพัสดุ",
+        active_view_prefix: "มุมมองปัจจุบัน:",
+
+        // Dashboard
+        dash_banner_title: "ข้อมูลเชิงลึกและสถิติระบบ",
+        dash_banner_sub: "สถิติแบบเรียลไทม์เพื่อป้องกันยาหมดอายุ จัดการพื้นที่จัดเก็บ และติดตามห่วงโซ่อุปทาน",
+        dash_banner_live: "แดชบอร์ดเรียลไทม์",
+        card_total_header: "ทั้งหมด",
+        dash_card1_desc: "จำนวนชนิดยาในคลัง",
+        card_expired_header: "หมดอายุ",
+        dash_card2_desc: "รุ่นยาที่หมดอายุ — ดำเนินการทำลายทันที",
+        card_near_header: "ใกล้หมดอายุ",
+        dash_card3_desc: "รุ่นยาที่จะหมดอายุภายใน 90 วัน — ควรจัดสรรใช้งานก่อน",
+        card_prevented_header: "มูลค่าที่ป้องกันได้",
+        dash_card4_desc: "มูลค่าความเสียหายที่ป้องกันได้ด้วยแจ้งเตือน FEFO",
+        chart_title: "แนวโน้มการใช้งานยา",
+        chart_timeframe: "6 เดือนที่ผ่านมา",
+        chart_dataset_label: "ปริมาณการใช้งาน",
+        activity_title: "กิจกรรมคลังยาล่าสุด",
+        activity_view_full: "ดูประวัติทั้งหมด",
+        activity_sys_init: "เริ่มทำงานระบบ",
+        activity_item1_title: "เพิ่มข้อมูลยาเริ่มต้น",
+        activity_item1_desc: "แบ็กเอนด์ FastAPI ทำการย้ายฐานข้อมูลและเริ่มต้นข้อมูลสำเร็จ",
+        activity_item2_title: "แจ้งเตือนยาหมดอายุ",
+        activity_item2_desc: "ตรวจพบรุ่นยา Paracetamol และ Vitamin C หมดอายุ ระบบสร้างการแจ้งเตือนอัตโนมัติ",
+        activity_item3_title: "ระบบ FEFO ทำงาน",
+        activity_item3_desc: "ดึงรายการยาตามลำดับวันหมดอายุ (FEFO) จากฐานข้อมูล SQL",
+
+        // Inventory
+        stat_total_label: "จำนวนชนิดยาในคลัง",
+        stat_total_sub: "ชนิดยาที่แตกต่างกัน",
+        stat_expired_label: "การแจ้งเตือนวิกฤต (หมดอายุ)",
+        stat_expired_sub: "ต้องทำการทำลายทันที",
+        stat_near_label: "ใกล้หมดอายุ (< 90 วัน)",
+        stat_near_sub: "ควรจัดลำดับการใช้ก่อน (FEFO)",
+        stat_low_label: "ยาเหลือน้อย (< 10 ชิ้น)",
+        stat_low_sub: "ควรสั่งซื้อเพิ่มเร็วๆ นี้",
+
+        alerts_critical_title: "การแจ้งเตือนวิกฤต: ยาหมดอายุ",
+        alerts_warning_title: "คำเตือน: สต็อกและวันหมดอายุ",
+        alerts_no_critical: "ไม่มีการแจ้งเตือนวิกฤต",
+        alerts_no_warning: "ไม่มีคำเตือนในขณะนี้",
+        alert_expired_today: "หมดอายุวันนี้",
+        alert_expired_days: "หมดอายุ {days} วันที่แล้ว",
+        alert_expired_1day: "หมดอายุ 1 วันที่แล้ว",
+        alert_expires_in: "จะหมดอายุใน {days} วัน",
+        alert_low_stock: "ยาเหลือน้อย: คงเหลือ {qty}",
+        alert_batch_label: "รุ่น",
+        alert_qty_label: "จำนวน",
+
+        search_placeholder: "ค้นหายาตามชื่อ...",
+        btn_add_medicine: "เพิ่มรายการยา",
+        table_section_title: "รายการคลังยาปัจจุบัน",
+        table_section_sub: "เรียงลำดับตามหลัก FEFO (หมดอายุก่อน ออกก่อน)",
+        legend_label: "สัญลักษณ์:",
+        legend_expired: "หมดอายุ",
+        legend_near_low: "ใกล้หมดอายุ / เหลือน้อย",
+        legend_normal: "ปกติ",
+
+        th_med_name: "ชื่อยา",
+        th_batch: "หมายเลขรุ่น",
+        th_quantity: "จำนวน",
+        th_unit_price: "ราคาต่อหน่วย",
+        th_expiry_date: "วันหมดอายุ",
+        th_storage: "สถานที่จัดเก็บ",
+        th_status: "สถานะ",
+
+        table_loading: "กำลังโหลดข้อมูลคลังยา...",
+        table_no_records: "ไม่พบบันทึกข้อมูลยาในคลัง",
+        table_error: "ไม่สามารถดึงข้อมูลคลังยาได้ กรุณาตรวจสอบว่าเซิร์ฟเวอร์ API ทำงานอยู่",
+
+        status_expired: "หมดอายุ",
+        status_attention: "ต้องให้ความสนใจ",
+        status_stable: "ปกติ",
+
+        storage_room_temp: "อุณหภูมิห้อง",
+        storage_refrigerator: "ตู้เย็น",
+        storage_freezer: "ตู้แช่แข็ง",
+
+        days_ago: "หมดอายุ {days} วันที่แล้ว",
+        days_left: "เหลืออีก {days} วัน",
+
+        // Tracking Map
+        track_banner_title: "สถานะการขนส่งสายความเย็นเรียลไทม์",
+        track_banner_sub: "การติดตาม GPS เรียลไทม์และข้อมูล IoT สำหรับการขนส่งยา",
+        track_banner_badge: "จำลองสถานการณ์การทำงาน",
+        track_status_header: "สถานะการขนส่ง",
+        track_route_info: "เส้นทาง: กรุงเทพฯ ไป นครสวรรค์",
+        track_progress_label: "ความคืบหน้า",
+        track_temp_header: "อุณหภูมิ",
+        track_temp_badge: "อยู่ในช่วงปลอดภัย",
+        track_humidity_header: "ความชื้น",
+        track_humidity_badge: "เหมาะสม",
+        track_coords_header: "พิกัด GPS",
+        track_lat_label: "ละติจูด:",
+        track_lng_label: "ลองจิจูด:",
+
+        iot_status_in_transit: "กำลังขนส่ง",
+        iot_status_delivered: "จัดส่งสำเร็จ",
+        iot_status_pending: "รอดำเนินการ",
+
+        map_bkk_title: "คลังสินค้ากลาง กรุงเทพฯ",
+        map_bkk_desc: "จุดเริ่มต้น",
+        map_nsw_title: "ศูนย์กระจายสินค้า นครสวรรค์",
+        map_nsw_desc: "จุดหมายปลายทาง",
+        map_vehicle_title: "ยานพาหนะขนส่งยา (ควบคุมอุณหภูมิ)",
+        map_vehicle_popup_title: "รถขนส่งควบคุมอุณหภูมิ",
+
+        // Modal
+        modal_title: "เพิ่มรายการยาใหม่",
+        modal_label_name: "ชื่อยา",
+        modal_ph_name: "เช่น Paracetamol",
+        modal_label_batch: "หมายเลขรุ่น",
+        modal_ph_batch: "เช่น BA-991",
+        modal_label_qty: "จำนวน",
+        modal_ph_qty: "เช่น 50",
+        modal_label_expiry: "วันหมดอายุ",
+        modal_label_storage: "สถานะการจัดเก็บ",
+        opt_room_temp: "อุณหภูมิห้อง",
+        opt_refrigerator: "ตู้เย็น",
+        opt_freezer: "ตู้แช่แข็ง",
+        modal_label_price: "ราคาต่อหน่วย (฿)",
+        modal_ph_price: "เช่น 12.50",
+        btn_cancel: "ยกเลิก",
+        btn_save_medicine: "บันทึกรายการยา",
+
+        // Footer
+        footer_text: "MediKeep Prototype - งานประกวดโครงงานวิทยาศาสตร์และวิศวกรรมศาสตร์ 2026"
+    }
+};
+
+// Language State (Preserved via localStorage)
+let currentLang = (localStorage.getItem('medikeep_lang') || 'TH').toUpperCase();
+
+// Translation Helper Function
+function t(key, params = {}) {
+    const langKey = currentLang.toLowerCase();
+    let text = translations[langKey]?.[key] || translations['en']?.[key] || key;
+    for (const [pKey, pVal] of Object.entries(params)) {
+        text = text.replace(new RegExp(`\\{${pKey}\\}`, 'g'), pVal);
+    }
+    return text;
+}
+
+// Switch Language and Update UI Dynamically
+function setLanguage(lang) {
+    currentLang = lang.toUpperCase();
+    localStorage.setItem('medikeep_lang', currentLang);
+
+    // Update Language Toggle Buttons Style
+    const activeClass = 'px-2.5 py-1 rounded-lg transition duration-200 bg-sky-500 text-white font-bold shadow-sm';
+    const inactiveClass = 'px-2.5 py-1 rounded-lg transition duration-200 text-slate-500 hover:text-slate-800 font-semibold';
+
+    if (langThBtn && langEnBtn) {
+        if (currentLang === 'TH') {
+            langThBtn.className = activeClass;
+            langEnBtn.className = inactiveClass;
+        } else {
+            langEnBtn.className = activeClass;
+            langThBtn.className = inactiveClass;
+        }
+    }
+
+    // Translate DOM text elements with data-i18n attribute
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (key) {
+            el.textContent = t(key);
+        }
+    });
+
+    // Translate input placeholders with data-i18n-placeholder attribute
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (key) {
+            el.placeholder = t(key);
+        }
+    });
+
+    // Update active tab view label text
+    updateActiveViewLabel();
+
+    // Re-render dynamic components from cache if loaded
+    if (lastMedicinesData) {
+        renderMedicinesTable(lastMedicinesData);
+    }
+    if (lastAlertsData) {
+        renderAlerts(lastAlertsData);
+    }
+    if (lastTrackingData) {
+        updateTrackingUI(lastTrackingData);
+    }
+
+    // Re-render chart dataset label
+    if (usageTrendsChartInstance) {
+        fetchAndRenderChart();
+    }
+}
+
+// Update Active View Label text dynamically based on language
+function updateActiveViewLabel() {
+    if (!currentViewLabel) return;
+    if (activeTabState === 'dashboard') {
+        currentViewLabel.textContent = t('tab_dashboard');
+    } else if (activeTabState === 'inventory') {
+        currentViewLabel.textContent = t('tab_inventory');
+    } else if (activeTabState === 'tracking') {
+        currentViewLabel.textContent = t('tab_tracking');
+    }
+}
+
+// Attach Language Switcher Click Event Listeners
+if (langThBtn && langEnBtn) {
+    langThBtn.addEventListener('click', () => setLanguage('TH'));
+    langEnBtn.addEventListener('click', () => setLanguage('EN'));
+}
 
 // ============================================================
 // UTILITY HELPERS
@@ -74,11 +447,26 @@ function getDaysToExpiry(expiryDateStr) {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
 
+// Storage Status Translation Helper
+function getStorageStatusText(status) {
+    if (status === 'Room Temp') return t('storage_room_temp');
+    if (status === 'Refrigerator') return t('storage_refrigerator');
+    if (status === 'Freezer') return t('storage_freezer');
+    return status;
+}
+
+// IoT Status Translation Helper
+function getIotStatusText(status) {
+    if (status === 'In Transit') return t('iot_status_in_transit');
+    if (status === 'Delivered') return t('iot_status_delivered');
+    if (status === 'Pending') return t('iot_status_pending');
+    return status;
+}
+
 // ============================================================
 // MODAL LOGIC
 // ============================================================
 
-// Open / Close Modal Logic
 function openModal() {
     addMedModal.classList.remove('opacity-0', 'pointer-events-none');
     addMedModal.querySelector('div').classList.remove('scale-95');
@@ -87,7 +475,6 @@ function openModal() {
     document.getElementById('med-expiry').value = new Date().toISOString().split('T')[0];
 }
 
-// Close Modal Logic
 function closeModal() {
     addMedModal.classList.add('opacity-0', 'pointer-events-none');
     addMedModal.querySelector('div').classList.remove('scale-100');
@@ -95,29 +482,28 @@ function closeModal() {
     addMedForm.reset();
 }
 
-addMedBtn.addEventListener('click', openModal);
-closeModalBtn.addEventListener('click', closeModal);
-cancelModalBtn.addEventListener('click', closeModal);
+if (addMedBtn) addMedBtn.addEventListener('click', openModal);
+if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
+if (cancelModalBtn) cancelModalBtn.addEventListener('click', closeModal);
 
-// Close modal if user clicks outside of it
-addMedModal.addEventListener('click', (e) => {
-    if (e.target === addMedModal) {
-        closeModal();
-    }
-});
+if (addMedModal) {
+    addMedModal.addEventListener('click', (e) => {
+        if (e.target === addMedModal) {
+            closeModal();
+        }
+    });
+}
 
 // ============================================================
 // DASHBOARD SUMMARY
 // ============================================================
 
-// Fetch the aggregated dashboard summary from the API and update the 4 dashboard cards
 async function fetchDashboardSummary() {
     try {
         const response = await fetch(`${API_BASE}/dashboard-summary`);
         if (!response.ok) throw new Error('Failed to fetch dashboard summary');
         const data = await response.json();
 
-        // Animate values in
         if (dashTotalItems) dashTotalItems.textContent = data.total_items;
         if (dashExpired) dashExpired.textContent = data.critical_alerts;
         if (dashNearExpiry) dashNearExpiry.textContent = data.near_expiry;
@@ -135,19 +521,19 @@ async function fetchDashboardSummary() {
 // ALERTS
 // ============================================================
 
-// Fetch and load alerts
 async function fetchAlerts() {
     try {
         const response = await fetch(`${API_BASE}/alerts`);
         if (!response.ok) throw new Error('Failed to fetch alerts');
         const data = await response.json();
 
+        lastAlertsData = data;
         renderAlerts(data);
 
         // Update stats counters
-        statExpired.textContent = data.expired.length;
-        statNearExpiry.textContent = data.near_expiry.length;
-        statLowStock.textContent = data.low_stock.length;
+        if (statExpired) statExpired.textContent = data.expired.length;
+        if (statNearExpiry) statNearExpiry.textContent = data.near_expiry.length;
+        if (statLowStock) statLowStock.textContent = data.low_stock.length;
     } catch (error) {
         console.error('Error fetching alerts:', error);
     }
@@ -157,24 +543,27 @@ async function fetchAlerts() {
 function renderAlerts(alerts) {
     // 1. Expired alerts
     expiredAlertsContainer.innerHTML = '';
-    if (alerts.expired.length === 0) {
-        expiredAlertsContainer.innerHTML = '<div class="text-slate-400 text-sm text-center py-6">No active critical alerts.</div>';
+    if (!alerts || alerts.expired.length === 0) {
+        expiredAlertsContainer.innerHTML = `<div class="text-slate-400 text-sm text-center py-6">${t('alerts_no_critical')}</div>`;
     } else {
         alerts.expired.forEach(med => {
             const card = document.createElement('div');
             card.className = 'flex items-center justify-between p-3.5 bg-red-50 border border-red-100 rounded-xl transition duration-200 hover:bg-red-100/50 shadow-sm';
 
             const daysAgo = Math.abs(getDaysToExpiry(med.expiry_date));
-            const daysLabel = daysAgo === 0 ? "today" : `${daysAgo} day${daysAgo > 1 ? 's' : ''} ago`;
+            const daysLabel = daysAgo === 0 
+                ? t('alert_expired_today') 
+                : (daysAgo === 1 ? t('alert_expired_1day') : t('alert_expired_days', { days: daysAgo }));
 
+            // NOTE: med.name (Drug Title) MUST NOT be translated or modified
             card.innerHTML = `
                 <div>
                     <h3 class="font-semibold text-red-900 text-sm">${med.name}</h3>
-                    <p class="text-xs text-red-700/80">Batch: ${med.batch_number} • Qty: ${med.quantity}</p>
+                    <p class="text-xs text-red-700/80">${t('alert_batch_label')}: ${med.batch_number} • ${t('alert_qty_label')}: ${med.quantity}</p>
                 </div>
                 <div class="text-right">
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold bg-red-100 border border-red-200 text-red-700">
-                        Expired ${daysLabel}
+                        ${daysLabel}
                     </span>
                     <p class="text-[10px] text-red-600/70 mt-1">${med.expiry_date}</p>
                 </div>
@@ -187,32 +576,31 @@ function renderAlerts(alerts) {
     warningAlertsContainer.innerHTML = '';
     const warnings = [];
 
-    // Process near expiry
-    alerts.near_expiry.forEach(med => {
-        const days = getDaysToExpiry(med.expiry_date);
-        warnings.push({
-            type: 'expiry',
-            med: med,
-            days: days,
-            label: `Expires in ${days} days`
-        });
-    });
-
-    // Process low stock
-    alerts.low_stock.forEach(med => {
-        // Avoid duplicate alerts for same item if it's already near expiry (keep it unified)
-        const exists = warnings.find(w => w.med.id === med.id);
-        if (!exists) {
+    if (alerts) {
+        alerts.near_expiry.forEach(med => {
+            const days = getDaysToExpiry(med.expiry_date);
             warnings.push({
-                type: 'stock',
+                type: 'expiry',
                 med: med,
-                label: `Low Stock: ${med.quantity} remaining`
+                days: days,
+                label: t('alert_expires_in', { days: days })
             });
-        }
-    });
+        });
+
+        alerts.low_stock.forEach(med => {
+            const exists = warnings.find(w => w.med.id === med.id);
+            if (!exists) {
+                warnings.push({
+                    type: 'stock',
+                    med: med,
+                    label: t('alert_low_stock', { qty: med.quantity })
+                });
+            }
+        });
+    }
 
     if (warnings.length === 0) {
-        warningAlertsContainer.innerHTML = '<div class="text-slate-400 text-sm text-center py-6">No warnings currently active.</div>';
+        warningAlertsContainer.innerHTML = `<div class="text-slate-400 text-sm text-center py-6">${t('alerts_no_warning')}</div>`;
     } else {
         warnings.forEach(warn => {
             const card = document.createElement('div');
@@ -220,10 +608,11 @@ function renderAlerts(alerts) {
 
             const badgeColor = warn.type === 'expiry' ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-orange-100 text-orange-850 border-orange-200';
 
+            // NOTE: warn.med.name (Drug Title) MUST NOT be translated or modified
             card.innerHTML = `
                 <div>
                     <h3 class="font-semibold text-amber-900 text-sm">${warn.med.name}</h3>
-                    <p class="text-xs text-amber-700/80">Batch: ${warn.med.batch_number} • Qty: ${warn.med.quantity}</p>
+                    <p class="text-xs text-amber-700/80">${t('alert_batch_label')}: ${warn.med.batch_number} • ${t('alert_qty_label')}: ${warn.med.quantity}</p>
                 </div>
                 <div class="text-right">
                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${badgeColor} border">
@@ -241,7 +630,6 @@ function renderAlerts(alerts) {
 // MEDICINES TABLE
 // ============================================================
 
-// Fetch and load medicines table
 async function fetchMedicines(searchQuery = '') {
     try {
         let url = `${API_BASE}/medicines`;
@@ -253,10 +641,10 @@ async function fetchMedicines(searchQuery = '') {
         if (!response.ok) throw new Error('Failed to fetch medicines');
         const medicines = await response.json();
 
+        lastMedicinesData = medicines;
         renderMedicinesTable(medicines);
 
-        // Update total items stat (only on general list load, not search)
-        if (!searchQuery) {
+        if (!searchQuery && statTotalItems) {
             statTotalItems.textContent = medicines.length;
         }
     } catch (error) {
@@ -264,7 +652,7 @@ async function fetchMedicines(searchQuery = '') {
         inventoryTableBody.innerHTML = `
             <tr>
                 <td colspan="7" class="px-6 py-8 text-center text-rose-600">
-                    Failed to fetch inventory data. Please verify the backend API server is running on port 8000.
+                    ${t('table_error')}
                 </td>
             </tr>
         `;
@@ -275,11 +663,11 @@ async function fetchMedicines(searchQuery = '') {
 function renderMedicinesTable(medicines) {
     inventoryTableBody.innerHTML = '';
 
-    if (medicines.length === 0) {
+    if (!medicines || medicines.length === 0) {
         inventoryTableBody.innerHTML = `
             <tr>
                 <td colspan="7" class="px-6 py-12 text-center text-slate-400">
-                    No medicine inventory records found.
+                    ${t('table_no_records')}
                 </td>
             </tr>
         `;
@@ -296,24 +684,23 @@ function renderMedicinesTable(medicines) {
 
         if (days < 0) {
             // Expired
-            statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-50 border border-red-200 text-red-700">Expired</span>`;
+            statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-50 border border-red-200 text-red-700">${t('status_expired')}</span>`;
             rowIndicator = 'border-l-4 border-red-500';
         } else if (days <= 90 || med.quantity < 10) {
             // Low stock or Near Expiry
-            statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 border border-amber-200 text-amber-700">Attention Needed</span>`;
+            statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 border border-amber-200 text-amber-700">${t('status_attention')}</span>`;
             rowIndicator = 'border-l-4 border-amber-500';
         } else {
             // Stable
-            statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 border border-emerald-200 text-emerald-700">Stable</span>`;
+            statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 border border-emerald-200 text-emerald-700">${t('status_stable')}</span>`;
             rowIndicator = 'border-l-4 border-transparent';
         }
 
-        // Format storage location icon/color
         const isRefrig = med.storage_status === 'Refrigerator';
         const isFreezer = med.storage_status === 'Freezer';
         const storageColor = isRefrig ? 'text-cyan-700 bg-cyan-50 border border-cyan-200' : isFreezer ? 'text-blue-700 bg-blue-50 border border-blue-200' : 'text-emerald-700 bg-emerald-50 border border-emerald-200';
+        const storageDisplay = getStorageStatusText(med.storage_status);
 
-        // Low Stock quantity formatting
         const isLowStock = med.quantity < 10;
         const qtyDisplay = isLowStock
             ? `<span class="text-amber-600 font-semibold flex items-center justify-end space-x-1">
@@ -321,9 +708,10 @@ function renderMedicinesTable(medicines) {
                </span>`
             : `<span class="text-slate-700">${med.quantity}</span>`;
 
-        // Format price per unit in Thai Baht
         const priceDisplay = formatBaht(med.price_per_unit);
+        const daysSubtext = days < 0 ? t('days_ago', { days: Math.abs(days) }) : t('days_left', { days: days });
 
+        // CRITICAL REQUIREMENT: med.name (Drug title) MUST remain 100% UNCHANGED
         tr.innerHTML = `
             <td class="px-6 py-4 font-semibold text-slate-800 ${rowIndicator}">${med.name}</td>
             <td class="px-6 py-4 text-slate-500 font-mono text-xs">${med.batch_number}</td>
@@ -332,12 +720,12 @@ function renderMedicinesTable(medicines) {
             <td class="px-6 py-4 text-slate-700">
                 <div>${med.expiry_date}</div>
                 <div class="text-[10px] ${days < 0 ? 'text-red-600' : days <= 90 ? 'text-amber-600' : 'text-slate-400'} font-medium">
-                    ${days < 0 ? `Expired ${Math.abs(days)}d ago` : `${days} days left`}
+                    ${daysSubtext}
                 </div>
             </td>
             <td class="px-6 py-4">
                 <span class="px-2.5 py-1 rounded-lg text-xs font-medium ${storageColor}">
-                    ${med.storage_status}
+                    ${storageDisplay}
                 </span>
             </td>
             <td class="px-6 py-4">${statusBadge}</td>
@@ -346,74 +734,75 @@ function renderMedicinesTable(medicines) {
         inventoryTableBody.appendChild(tr);
     });
 
-    // Trigger Lucide icons on newly created DOM elements
-    lucide.createIcons();
+    if (window.lucide) {
+        lucide.createIcons();
+    }
 }
 
 // ============================================================
 // SEARCH
 // ============================================================
 
-// Search bar listener (with debounce for keyboard entries)
 let debounceTimeout;
-searchInput.addEventListener('input', (e) => {
-    clearTimeout(debounceTimeout);
-    debounceTimeout = setTimeout(() => {
-        fetchMedicines(e.target.value.trim());
-    }, 300);
-});
+if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(debounceTimeout);
+        debounceTimeout = setTimeout(() => {
+            fetchMedicines(e.target.value.trim());
+        }, 300);
+    });
+}
 
 // ============================================================
 // FORM SUBMISSION
 // ============================================================
 
-// Form submission to create a new medicine
-addMedForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
+if (addMedForm) {
+    addMedForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-    const pricePerUnit = parseFloat(document.getElementById('med-price').value) || 0.0;
+        const pricePerUnit = parseFloat(document.getElementById('med-price').value) || 0.0;
 
-    const newMedicine = {
-        name: document.getElementById('med-name').value.trim(),
-        batch_number: document.getElementById('med-batch').value.trim(),
-        quantity: parseInt(document.getElementById('med-qty').value),
-        price_per_unit: pricePerUnit,
-        expiry_date: document.getElementById('med-expiry').value,
-        storage_status: document.getElementById('med-storage').value
-    };
+        const newMedicine = {
+            name: document.getElementById('med-name').value.trim(),
+            batch_number: document.getElementById('med-batch').value.trim(),
+            quantity: parseInt(document.getElementById('med-qty').value),
+            price_per_unit: pricePerUnit,
+            expiry_date: document.getElementById('med-expiry').value,
+            storage_status: document.getElementById('med-storage').value
+        };
 
-    try {
-        const response = await fetch(`${API_BASE}/medicines`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(newMedicine)
-        });
+        try {
+            const response = await fetch(`${API_BASE}/medicines`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(newMedicine)
+            });
 
-        if (!response.ok) {
-            const errData = await response.json();
-            throw new Error(errData.detail || 'Failed to save medicine');
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData.detail || 'Failed to save medicine');
+            }
+
+            closeModal();
+
+            await fetchMedicines(searchInput ? searchInput.value.trim() : '');
+            await fetchAlerts();
+            await fetchDashboardSummary();
+            await fetchAndRenderChart();
+        } catch (error) {
+            console.error('Error adding medicine:', error);
+            alert(`Error: ${error.message}`);
         }
-
-        closeModal();
-
-        // Refresh all views reactively
-        await fetchMedicines(searchInput.value.trim());
-        await fetchAlerts();
-        await fetchDashboardSummary();
-        await fetchAndRenderChart();
-    } catch (error) {
-        console.error('Error adding medicine:', error);
-        alert(`Error: ${error.message}`);
-    }
-});
+    });
+}
 
 // ============================================================
 // CHART GENERATION
 // ============================================================
 
-// Fetch analytics trends and render the line chart
 async function fetchAndRenderChart() {
     try {
         const response = await fetch(`${API_BASE}/usage-trends`);
@@ -423,14 +812,13 @@ async function fetchAndRenderChart() {
         const canvas = document.getElementById('usageTrendsChart');
         if (!canvas) return;
 
-        // Prevent canvas re-use rendering crashes by destroying the previous chart instance
         if (usageTrendsChartInstance) {
             usageTrendsChartInstance.destroy();
         }
 
         const ctx = canvas.getContext('2d');
         const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-        gradient.addColorStop(0, 'rgba(14, 165, 233, 0.3)'); // Sky Blue/Medical Blue theme
+        gradient.addColorStop(0, 'rgba(14, 165, 233, 0.3)');
         gradient.addColorStop(1, 'rgba(14, 165, 233, 0.0)');
 
         usageTrendsChartInstance = new Chart(canvas, {
@@ -438,9 +826,9 @@ async function fetchAndRenderChart() {
             data: {
                 labels: data.labels,
                 datasets: [{
-                    label: 'Consumed Volume',
+                    label: t('chart_dataset_label'),
                     data: data.data,
-                    borderColor: '#0284c7', // Professional Medical Blue
+                    borderColor: '#0284c7',
                     backgroundColor: gradient,
                     fill: true,
                     tension: 0.4,
@@ -506,12 +894,12 @@ async function fetchAndRenderChart() {
 
 // Tab Switcher Logic
 function switchTab(activeTab) {
-    // Hide all views first
+    activeTabState = activeTab;
+
     dashboardView.classList.add('hidden');
     inventoryView.classList.add('hidden');
     mapView.classList.add('hidden');
 
-    // Reset all tab button styles to inactive state
     const inactiveClass = 'flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-lg transition duration-200 text-slate-500 hover:text-slate-800 hover:bg-white/50';
     const activeClass = 'flex items-center space-x-2 px-4 py-2 text-sm font-semibold bg-white text-sky-600 border border-slate-200 shadow-sm rounded-lg transition duration-200';
 
@@ -522,13 +910,10 @@ function switchTab(activeTab) {
     if (activeTab === 'dashboard') {
         dashboardView.classList.remove('hidden');
         tabDashboardBtn.className = activeClass;
-        if (currentViewLabel) {
-            currentViewLabel.textContent = 'Dashboard Overview';
-        }
+        updateActiveViewLabel();
         fetchDashboardSummary();
         fetchAndRenderChart();
         
-        // Stop polling when not on the map view
         if (trackingInterval) {
             clearInterval(trackingInterval);
             trackingInterval = null;
@@ -536,11 +921,8 @@ function switchTab(activeTab) {
     } else if (activeTab === 'inventory') {
         inventoryView.classList.remove('hidden');
         tabInventoryBtn.className = activeClass;
-        if (currentViewLabel) {
-            currentViewLabel.textContent = 'Inventory Management';
-        }
+        updateActiveViewLabel();
         
-        // Stop polling when not on the map view
         if (trackingInterval) {
             clearInterval(trackingInterval);
             trackingInterval = null;
@@ -548,15 +930,11 @@ function switchTab(activeTab) {
     } else if (activeTab === 'tracking') {
         mapView.classList.remove('hidden');
         tabTrackingBtn.className = activeClass;
-        if (currentViewLabel) {
-            currentViewLabel.textContent = 'Tracking Map';
-        }
+        updateActiveViewLabel();
         
-        // Initialize map & start loop
         initTrackingMap();
         startTrackingLoop();
         
-        // Ensure map layout renders fully inside previously hidden container
         if (leafletMap) {
             setTimeout(() => {
                 leafletMap.invalidateSize();
@@ -564,11 +942,11 @@ function switchTab(activeTab) {
         }
     }
 
-    // Re-trigger Lucide icons to render inside the active tab
-    lucide.createIcons();
+    if (window.lucide) {
+        lucide.createIcons();
+    }
 }
 
-// Add event listeners for tab switching
 if (tabDashboardBtn && tabInventoryBtn && tabTrackingBtn) {
     tabDashboardBtn.addEventListener('click', () => switchTab('dashboard'));
     tabInventoryBtn.addEventListener('click', () => switchTab('inventory'));
@@ -580,15 +958,18 @@ if (tabDashboardBtn && tabInventoryBtn && tabTrackingBtn) {
 // ============================================================
 
 function initTrackingMap() {
-    if (leafletMap) return; // Already initialized
+    if (leafletMap) {
+        // Update popup titles if map already initialized
+        if (bkkMarker) bkkMarker.setPopupContent(`<b>${t('map_bkk_title')}</b><br>${t('map_bkk_desc')}`);
+        if (nswMarker) nswMarker.setPopupContent(`<b>${t('map_nsw_title')}</b><br>${t('map_nsw_desc')}`);
+        return;
+    }
 
-    // Center point between Bangkok and Nakhon Sawan
     const centerLat = (13.7563 + 15.7047) / 2;
     const centerLng = (100.5018 + 100.1372) / 2;
 
     leafletMap = L.map('map').setView([centerLat, centerLng], 7);
 
-    // OpenStreetMap tile layers
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(leafletMap);
@@ -596,8 +977,7 @@ function initTrackingMap() {
     const startPoint = [13.7563, 100.5018];
     const endPoint = [15.7047, 100.1372];
 
-    // Static Warehouse Markers
-    L.marker(startPoint, {
+    bkkMarker = L.marker(startPoint, {
         icon: L.icon({
             iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
             shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -606,9 +986,9 @@ function initTrackingMap() {
             popupAnchor: [1, -34],
             shadowSize: [41, 41]
         })
-    }).addTo(leafletMap).bindPopup('<b>Bangkok Central Warehouse</b><br>Origin point.');
+    }).addTo(leafletMap).bindPopup(`<b>${t('map_bkk_title')}</b><br>${t('map_bkk_desc')}`);
 
-    L.marker(endPoint, {
+    nswMarker = L.marker(endPoint, {
         icon: L.icon({
             iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
             shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -617,17 +997,15 @@ function initTrackingMap() {
             popupAnchor: [1, -34],
             shadowSize: [41, 41]
         })
-    }).addTo(leafletMap).bindPopup('<b>Nakhon Sawan Facility</b><br>Destination facility.');
+    }).addTo(leafletMap).bindPopup(`<b>${t('map_nsw_title')}</b><br>${t('map_nsw_desc')}`);
 
-    // Route path line
     routePolyline = L.polyline([startPoint, endPoint], {
-        color: '#0284c7', // Sky-600
+        color: '#0284c7',
         weight: 3,
         opacity: 0.6,
         dashArray: '5, 10'
     }).addTo(leafletMap);
 
-    // Vehicle transport marker (Red color)
     vehicleMarker = L.marker(startPoint, {
         icon: L.icon({
             iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
@@ -637,13 +1015,12 @@ function initTrackingMap() {
             popupAnchor: [1, -34],
             shadowSize: [41, 41]
         })
-    }).addTo(leafletMap).bindPopup('Medical Transport Vehicle (Cold Chain)');
+    }).addTo(leafletMap).bindPopup(t('map_vehicle_title'));
 }
 
 function startTrackingLoop() {
     fetchTrackingData();
     if (trackingInterval) clearInterval(trackingInterval);
-    // Fetch every 4 seconds (within the 3-5 seconds requirement)
     trackingInterval = setInterval(fetchTrackingData, 4000);
 }
 
@@ -653,54 +1030,67 @@ async function fetchTrackingData() {
         if (!response.ok) throw new Error('Failed to fetch tracking data');
         const data = await response.json();
 
-        // Update IoT Details on UI
-        const statusEl = document.getElementById('tracking-status');
-        const tempEl = document.getElementById('tracking-temp');
-        const humEl = document.getElementById('tracking-humidity');
-        const latEl = document.getElementById('tracking-lat');
-        const lngEl = document.getElementById('tracking-lng');
-        const progressPctEl = document.getElementById('tracking-progress-pct');
-        const progressBarEl = document.getElementById('tracking-progress-bar');
-
-        if (statusEl) statusEl.textContent = data.status;
-        if (tempEl) tempEl.textContent = `${data.telemetry.temperature}°C`;
-        if (humEl) humEl.textContent = `${data.telemetry.humidity}%`;
-        if (latEl) latEl.textContent = data.location.latitude.toFixed(5);
-        if (lngEl) lngEl.textContent = data.location.longitude.toFixed(5);
-        if (progressPctEl) progressPctEl.textContent = `${data.progress}%`;
-        if (progressBarEl) progressBarEl.style.width = `${data.progress}%`;
-
-        // Update Vehicle Marker position & popup content
-        if (vehicleMarker) {
-            const newPos = [data.location.latitude, data.location.longitude];
-            vehicleMarker.setLatLng(newPos);
-            vehicleMarker.setPopupContent(`
-                <div class="text-xs p-1">
-                    <p class="font-bold text-slate-800 mb-1">Cold Chain Vehicle</p>
-                    <p class="text-slate-650"><span class="font-semibold">Status:</span> ${data.status}</p>
-                    <p class="text-slate-650"><span class="font-semibold">Temp:</span> <span class="text-rose-600 font-bold">${data.telemetry.temperature}°C</span></p>
-                    <p class="text-slate-650"><span class="font-semibold">Humidity:</span> <span class="text-blue-600 font-bold">${data.telemetry.humidity}%</span></p>
-                    <p class="text-slate-650"><span class="font-semibold">Progress:</span> ${data.progress}%</p>
-                </div>
-            `);
-        }
+        lastTrackingData = data;
+        updateTrackingUI(data);
     } catch (error) {
         console.error('Error fetching tracking data:', error);
     }
+}
+
+function updateTrackingUI(data) {
+    if (!data) return;
+
+    const statusEl = document.getElementById('tracking-status');
+    const tempEl = document.getElementById('tracking-temp');
+    const humEl = document.getElementById('tracking-humidity');
+    const latEl = document.getElementById('tracking-lat');
+    const lngEl = document.getElementById('tracking-lng');
+    const progressPctEl = document.getElementById('tracking-progress-pct');
+    const progressBarEl = document.getElementById('tracking-progress-bar');
+
+    const statusText = getIotStatusText(data.status);
+
+    if (statusEl) statusEl.textContent = statusText;
+    if (tempEl) tempEl.textContent = `${data.telemetry.temperature}°C`;
+    if (humEl) humEl.textContent = `${data.telemetry.humidity}%`;
+    if (latEl) latEl.textContent = data.location.latitude.toFixed(5);
+    if (lngEl) lngEl.textContent = data.location.longitude.toFixed(5);
+    if (progressPctEl) progressPctEl.textContent = `${data.progress}%`;
+    if (progressBarEl) progressBarEl.style.width = `${data.progress}%`;
+
+    if (vehicleMarker) {
+        const newPos = [data.location.latitude, data.location.longitude];
+        vehicleMarker.setLatLng(newPos);
+        vehicleMarker.setPopupContent(`
+            <div class="text-xs p-1">
+                <p class="font-bold text-slate-800 mb-1">${t('map_vehicle_popup_title')}</p>
+                <p class="text-slate-650"><span class="font-semibold">${t('th_status')}:</span> ${statusText}</p>
+                <p class="text-slate-650"><span class="font-semibold">${t('track_temp_header')}:</span> <span class="text-rose-600 font-bold">${data.telemetry.temperature}°C</span></p>
+                <p class="text-slate-650"><span class="font-semibold">${t('track_humidity_header')}:</span> <span class="text-blue-600 font-bold">${data.telemetry.humidity}%</span></p>
+                <p class="text-slate-650"><span class="font-semibold">${t('track_progress_label')}:</span> ${data.progress}%</p>
+            </div>
+        `);
+    }
+
+    if (bkkMarker) bkkMarker.setPopupContent(`<b>${t('map_bkk_title')}</b><br>${t('map_bkk_desc')}`);
+    if (nswMarker) nswMarker.setPopupContent(`<b>${t('map_nsw_title')}</b><br>${t('map_nsw_desc')}`);
 }
 
 // ============================================================
 // PAGE INITIALIZATION
 // ============================================================
 
-// Page Initialization
 document.addEventListener('DOMContentLoaded', () => {
-    // Initial fetch
+    // Initialize Language from localStorage (or default TH)
+    setLanguage(currentLang);
+
+    // Initial API fetches
     fetchMedicines();
     fetchAlerts();
     fetchDashboardSummary();
     fetchAndRenderChart();
 
-    // Render initial static page lucide icons
-    lucide.createIcons();
+    if (window.lucide) {
+        lucide.createIcons();
+    }
 });

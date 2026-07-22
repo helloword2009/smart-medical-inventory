@@ -96,15 +96,27 @@
                     <h1
                         class="text-xl font-bold bg-gradient-to-r from-sky-600 to-cyan-500 bg-clip-text text-transparent">
                         MediKeep</h1>
-                    <p class="text-xs text-slate-500">Smart Medical Inventory</p>
+                    <p class="text-xs text-slate-500" data-i18n="nav_subtitle">Smart Medical Inventory</p>
                 </div>
             </div>
             <div class="flex items-center space-x-4">
                 <span
                     class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 border border-emerald-200 text-emerald-700">
                     <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
-                    API Connected
+                    <span data-i18n="nav_api_connected">API Connected</span>
                 </span>
+                <!-- Dual-Language Switcher (TH | EN) -->
+                <div class="flex items-center bg-slate-100 p-1 border border-slate-200/80 rounded-xl text-xs shadow-inner">
+                    <button id="lang-th-btn" type="button"
+                        class="px-2.5 py-1 rounded-lg transition duration-200 text-slate-500 hover:text-slate-800 font-semibold">
+                        TH
+                    </button>
+                    <span class="text-slate-300 px-0.5 font-light">|</span>
+                    <button id="lang-en-btn" type="button"
+                        class="px-2.5 py-1 rounded-lg transition duration-200 bg-sky-500 text-white font-bold shadow-sm">
+                        EN
+                    </button>
+                </div>
             </div>
         </div>
     </header>
@@ -118,22 +130,21 @@
                 <button id="tab-dashboard-btn"
                     class="flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-lg transition duration-200 text-slate-500 hover:text-slate-800 hover:bg-white/50">
                     <i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i>
-                    <span>Dashboard Overview</span>
+                    <span data-i18n="tab_dashboard">Dashboard Overview</span>
                 </button>
                 <button id="tab-inventory-btn"
                     class="flex items-center space-x-2 px-4 py-2 text-sm font-semibold bg-white text-sky-600 border border-slate-200 shadow-sm rounded-lg transition duration-200">
                     <i data-lucide="database" class="w-4.5 h-4.5"></i>
-                    <span>Inventory Management</span>
+                    <span data-i18n="tab_inventory">Inventory Management</span>
                 </button>
                 <button id="tab-tracking-btn"
                     class="flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-lg transition duration-200 text-slate-500 hover:text-slate-800 hover:bg-white/50">
                     <i data-lucide="map" class="w-4.5 h-4.5"></i>
-                    <span>Tracking Map</span>
+                    <span data-i18n="tab_tracking">Tracking Map</span>
                 </button>
             </div>
             <div class="hidden sm:block text-xs text-slate-400">
-                Active View: <span id="current-view-label" class="text-slate-700 font-semibold">Inventory
-                    Management</span>
+                <span data-i18n="active_view_prefix">Active View:</span> <span id="current-view-label" class="text-slate-700 font-semibold" data-i18n="tab_inventory">Inventory Management</span>
             </div>
         </div>
 
@@ -146,15 +157,16 @@
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h2
-                            class="text-xl font-bold bg-gradient-to-r from-slate-800 to-sky-700 bg-clip-text text-transparent">
+                            class="text-xl font-bold bg-gradient-to-r from-slate-800 to-sky-700 bg-clip-text text-transparent"
+                            data-i18n="dash_banner_title">
                             System Insights & Analytics</h2>
-                        <p class="text-sm text-slate-600 mt-1">Real-time statistics to prevent medicine expirations,
+                        <p class="text-sm text-slate-600 mt-1" data-i18n="dash_banner_sub">Real-time statistics to prevent medicine expirations,
                             optimize storage, and monitor supply chains.</p>
                     </div>
                     <div
                         class="flex items-center space-x-2 bg-sky-500/10 border border-sky-500/20 rounded-xl px-4 py-2.5 text-sky-600">
                         <i data-lucide="trending-up" class="w-5 h-5"></i>
-                        <span class="text-sm font-semibold">Live Dashboard</span>
+                        <span class="text-sm font-semibold" data-i18n="dash_banner_live">Live Dashboard</span>
                     </div>
                 </div>
             </div>
@@ -168,10 +180,10 @@
                         <div class="p-2.5 bg-slate-50 border border-slate-100 rounded-xl text-slate-600 group-hover:scale-110 transition duration-300">
                             <i data-lucide="package" class="w-5 h-5"></i>
                         </div>
-                        <span class="text-[10px] uppercase tracking-widest text-slate-400 font-semibold">Total</span>
+                        <span class="text-[10px] uppercase tracking-widest text-slate-400 font-semibold" data-i18n="card_total_header">Total</span>
                     </div>
                     <div class="text-3xl font-bold text-slate-800 dash-card-value" id="dash-total-items">—</div>
-                    <p class="text-xs text-slate-500 mt-1.5">Unique medicine types in inventory</p>
+                    <p class="text-xs text-slate-500 mt-1.5" data-i18n="dash_card1_desc">Unique medicine types in inventory</p>
                 </div>
 
                 <!-- Card 2: Expired Batches -->
@@ -180,10 +192,10 @@
                         <div class="p-2.5 bg-red-50 border border-red-100 rounded-xl text-red-600 group-hover:scale-110 transition duration-300">
                             <i data-lucide="skull" class="w-5 h-5"></i>
                         </div>
-                        <span class="text-[10px] uppercase tracking-widest text-red-600/80 font-semibold">Expired</span>
+                        <span class="text-[10px] uppercase tracking-widest text-red-600/80 font-semibold" data-i18n="card_expired_header">Expired</span>
                     </div>
                     <div class="text-3xl font-bold text-red-600 dash-card-value" id="dash-expired">—</div>
-                    <p class="text-xs text-red-500/70 mt-1.5">Batches past expiry date — dispose immediately</p>
+                    <p class="text-xs text-red-500/70 mt-1.5" data-i18n="dash_card2_desc">Batches past expiry date — dispose immediately</p>
                 </div>
 
                 <!-- Card 3: Near Expiry Batches -->
@@ -192,10 +204,10 @@
                         <div class="p-2.5 bg-amber-50 border border-amber-100 rounded-xl text-amber-600 group-hover:scale-110 transition duration-300">
                             <i data-lucide="calendar-clock" class="w-5 h-5"></i>
                         </div>
-                        <span class="text-[10px] uppercase tracking-widest text-amber-600/80 font-semibold">Near Expiry</span>
+                        <span class="text-[10px] uppercase tracking-widest text-amber-600/80 font-semibold" data-i18n="card_near_header">Near Expiry</span>
                     </div>
                     <div class="text-3xl font-bold text-amber-600 dash-card-value" id="dash-near-expiry">—</div>
-                    <p class="text-xs text-amber-500/70 mt-1.5">Batches expiring within 90 days — prioritize usage</p>
+                    <p class="text-xs text-amber-500/70 mt-1.5" data-i18n="dash_card3_desc">Batches expiring within 90 days — prioritize usage</p>
                 </div>
 
                 <!-- Card 4: Prevented Loss Value (Hero Card) -->
@@ -205,10 +217,10 @@
                         <div class="p-2.5 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-600 group-hover:scale-110 transition duration-300">
                             <i data-lucide="shield-check" class="w-5 h-5"></i>
                         </div>
-                        <span class="text-[10px] uppercase tracking-widest text-emerald-700/80 font-semibold">Saved</span>
+                        <span class="text-[10px] uppercase tracking-widest text-emerald-700/80 font-semibold" data-i18n="card_prevented_header">Saved</span>
                     </div>
                     <div class="text-3xl font-bold text-emerald-600 dash-card-value relative" id="dash-prevented-loss">—</div>
-                    <p class="text-xs text-emerald-600/80 mt-1.5 relative">Potential loss prevented via FEFO alerts</p>
+                    <p class="text-xs text-emerald-600/80 mt-1.5 relative" data-i18n="dash_card4_desc">Potential loss prevented via FEFO alerts</p>
                 </div>
 
             </div>
@@ -219,9 +231,9 @@
                 <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
                     <div class="flex items-center space-x-2.5 text-sky-600">
                         <i data-lucide="trending-up" class="w-5 h-5"></i>
-                        <h3 class="font-bold text-slate-800">Medicine Usage Trends</h3>
+                        <h3 class="font-bold text-slate-800" data-i18n="chart_title">Medicine Usage Trends</h3>
                     </div>
-                    <span class="text-xs text-slate-400">Last 6 Months</span>
+                    <span class="text-xs text-slate-400" data-i18n="chart_timeframe">Last 6 Months</span>
                 </div>
                 <div class="relative w-full" style="height: 400px;">
                     <canvas id="usageTrendsChart" class="w-full h-full"></canvas>
@@ -234,11 +246,11 @@
                 <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
                     <div class="flex items-center space-x-2.5 text-sky-600">
                         <i data-lucide="activity" class="w-5 h-5"></i>
-                        <h3 class="font-bold text-slate-800">Recent Inventory Activities</h3>
+                        <h3 class="font-bold text-slate-800" data-i18n="activity_title">Recent Inventory Activities</h3>
                     </div>
                     <button type="button"
-                        class="text-xs text-slate-500 hover:text-slate-800 transition cursor-not-allowed">View Full
-                        History</button>
+                        class="text-xs text-slate-500 hover:text-slate-800 transition cursor-not-allowed"
+                        data-i18n="activity_view_full">View Full History</button>
                 </div>
 
                 <div class="space-y-4">
@@ -248,12 +260,12 @@
                                 <i data-lucide="plus-circle" class="w-4.5 h-4.5"></i>
                             </div>
                             <div>
-                                <p class="text-sm font-semibold text-slate-800">New Medicine Seeded</p>
-                                <p class="text-xs text-slate-500">FastAPI backend completed initial database migration
+                                <p class="text-sm font-semibold text-slate-800" data-i18n="activity_item1_title">New Medicine Seeded</p>
+                                <p class="text-xs text-slate-500" data-i18n="activity_item1_desc">FastAPI backend completed initial database migration
                                     and table seed successfully.</p>
                             </div>
                         </div>
-                        <span class="text-xs text-slate-400 font-medium">System Initialization</span>
+                        <span class="text-xs text-slate-400 font-medium" data-i18n="activity_sys_init">System Initialization</span>
                     </div>
 
                     <div class="flex items-start justify-between border-b border-slate-100 pb-3">
@@ -262,12 +274,12 @@
                                 <i data-lucide="alert-triangle" class="w-4.5 h-4.5"></i>
                             </div>
                             <div>
-                                <p class="text-sm font-semibold text-slate-800">Expiry Alert Flagged</p>
-                                <p class="text-xs text-slate-500">Paracetamol and Vitamin C batches identified as
+                                <p class="text-sm font-semibold text-slate-800" data-i18n="activity_item2_title">Expiry Alert Flagged</p>
+                                <p class="text-xs text-slate-500" data-i18n="activity_item2_desc">Paracetamol and Vitamin C batches identified as
                                     expired. Alerts generated dynamically.</p>
                             </div>
                         </div>
-                        <span class="text-xs text-slate-400 font-medium">System Initialization</span>
+                        <span class="text-xs text-slate-400 font-medium" data-i18n="activity_sys_init">System Initialization</span>
                     </div>
 
                     <div class="flex items-start justify-between">
@@ -276,12 +288,12 @@
                                 <i data-lucide="refresh-cw" class="w-4.5 h-4.5"></i>
                             </div>
                             <div>
-                                <p class="text-sm font-semibold text-slate-800">FEFO Logic Active</p>
-                                <p class="text-xs text-slate-500">Medicines list retrieved in strict expiry date order
+                                <p class="text-sm font-semibold text-slate-800" data-i18n="activity_item3_title">FEFO Logic Active</p>
+                                <p class="text-xs text-slate-500" data-i18n="activity_item3_desc">Medicines list retrieved in strict expiry date order
                                     from SQL backend database.</p>
                             </div>
                         </div>
-                        <span class="text-xs text-slate-400 font-medium">System Initialization</span>
+                        <span class="text-xs text-slate-400 font-medium" data-i18n="activity_sys_init">System Initialization</span>
                     </div>
                 </div>
             </div>
@@ -294,41 +306,41 @@
                 <div
                     class="bg-white border border-slate-200 rounded-2xl p-5 hover:border-slate-300 hover:shadow-sm transition duration-300">
                     <div class="flex items-center justify-between text-slate-500 mb-2">
-                        <span class="text-sm font-medium">Total Inventory Types</span>
+                        <span class="text-sm font-medium" data-i18n="stat_total_label">Total Inventory Types</span>
                         <i data-lucide="box" class="w-5 h-5 text-slate-400"></i>
                     </div>
                     <div class="text-3xl font-bold text-slate-800" id="stat-total-items">0</div>
-                    <p class="text-xs text-slate-400 mt-1">Unique medicine models</p>
+                    <p class="text-xs text-slate-400 mt-1" data-i18n="stat_total_sub">Unique medicine models</p>
                 </div>
 
                 <div
                     class="bg-white border border-slate-200 rounded-2xl p-5 hover:border-red-200 hover:shadow-sm transition duration-300">
                     <div class="flex items-center justify-between text-red-600 mb-2">
-                        <span class="text-sm font-medium">Critical Alerts (Expired)</span>
+                        <span class="text-sm font-medium" data-i18n="stat_expired_label">Critical Alerts (Expired)</span>
                         <i data-lucide="skull" class="w-5 h-5 text-red-500"></i>
                     </div>
                     <div class="text-3xl font-bold text-red-600" id="stat-expired">0</div>
-                    <p class="text-xs text-slate-400 mt-1">Require immediate disposal</p>
+                    <p class="text-xs text-slate-400 mt-1" data-i18n="stat_expired_sub">Require immediate disposal</p>
                 </div>
 
                 <div
                     class="bg-white border border-slate-200 rounded-2xl p-5 hover:border-amber-200 hover:shadow-sm transition duration-300">
                     <div class="flex items-center justify-between text-amber-600 mb-2">
-                        <span class="text-sm font-medium">Near Expiry (&lt; 90 Days)</span>
+                        <span class="text-sm font-medium" data-i18n="stat_near_label">Near Expiry (&lt; 90 Days)</span>
                         <i data-lucide="calendar" class="w-5 h-5 text-amber-500"></i>
                     </div>
                     <div class="text-3xl font-bold text-amber-600" id="stat-near-expiry">0</div>
-                    <p class="text-xs text-slate-400 mt-1">Prioritize for usage (FEFO)</p>
+                    <p class="text-xs text-slate-400 mt-1" data-i18n="stat_near_sub">Prioritize for usage (FEFO)</p>
                 </div>
 
                 <div
                     class="bg-white border border-slate-200 rounded-2xl p-5 hover:border-amber-200 hover:shadow-sm transition duration-300">
                     <div class="flex items-center justify-between text-amber-600 mb-2">
-                        <span class="text-sm font-medium">Low Stock (&lt; 10 Qty)</span>
+                        <span class="text-sm font-medium" data-i18n="stat_low_label">Low Stock (&lt; 10 Qty)</span>
                         <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-500"></i>
                     </div>
                     <div class="text-3xl font-bold text-amber-600" id="stat-low-stock">0</div>
-                    <p class="text-xs text-slate-400 mt-1">Reorder soon</p>
+                    <p class="text-xs text-slate-400 mt-1" data-i18n="stat_low_sub">Reorder soon</p>
                 </div>
             </section>
 
@@ -343,11 +355,11 @@
                             class="p-1.5 bg-red-50 border border-red-100 rounded-lg text-red-500">
                             <i data-lucide="alert-octagon" class="w-5 h-5"></i>
                         </div>
-                        <h2 class="text-lg font-semibold text-slate-800">Critical Alerts: Expired</h2>
+                        <h2 class="text-lg font-semibold text-slate-800" data-i18n="alerts_critical_title">Critical Alerts: Expired</h2>
                     </div>
                     <div id="expired-alerts-container" class="space-y-3 max-h-[220px] overflow-y-auto pr-1">
                         <!-- Expired medicine alerts will be inserted here dynamically -->
-                        <div class="text-slate-400 text-sm text-center py-6">No active critical alerts.</div>
+                        <div class="text-slate-400 text-sm text-center py-6" data-i18n="alerts_no_critical">No active critical alerts.</div>
                     </div>
                 </div>
 
@@ -360,11 +372,11 @@
                             class="p-1.5 bg-amber-50 border border-amber-100 rounded-lg text-amber-500">
                             <i data-lucide="alert-triangle" class="w-5 h-5"></i>
                         </div>
-                        <h2 class="text-lg font-semibold text-slate-800">Warnings: Stock & Expiry</h2>
+                        <h2 class="text-lg font-semibold text-slate-800" data-i18n="alerts_warning_title">Warnings: Stock & Expiry</h2>
                     </div>
                     <div id="warning-alerts-container" class="space-y-3 max-h-[220px] overflow-y-auto pr-1">
                         <!-- Near-expiry/low-stock alerts will be inserted here dynamically -->
-                        <div class="text-slate-400 text-sm text-center py-6">No warnings currently active.</div>
+                        <div class="text-slate-400 text-sm text-center py-6" data-i18n="alerts_no_warning">No warnings currently active.</div>
                     </div>
                 </div>
             </section>
@@ -375,14 +387,14 @@
                 <div class="w-full sm:max-w-md relative">
                     <i data-lucide="search"
                         class="w-5 h-5 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2"></i>
-                    <input type="text" id="search-input" placeholder="Search medicine by name..."
+                    <input type="text" id="search-input" placeholder="Search medicine by name..." data-i18n-placeholder="search_placeholder"
                         class="w-full bg-slate-50 text-slate-800 pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:bg-white focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition">
                 </div>
                 <div class="flex items-center space-x-3 w-full sm:w-auto">
                     <button id="add-med-btn"
                         class="w-full sm:w-auto flex items-center justify-center space-x-2 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-semibold px-5 py-2.5 rounded-xl transition duration-300 shadow-sm hover:shadow-md">
                         <i data-lucide="plus" class="w-5 h-5"></i>
-                        <span>Add Medicine</span>
+                        <span data-i18n="btn_add_medicine">Add Medicine</span>
                     </button>
                 </div>
             </section>
@@ -392,18 +404,18 @@
                 <div
                     class="px-6 py-5 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
-                        <h2 class="text-lg font-bold text-slate-800">Live Inventory</h2>
-                        <p class="text-sm text-slate-500">Sorted by FEFO (First-Expired, First-Out) logic</p>
+                        <h2 class="text-lg font-bold text-slate-800" data-i18n="table_section_title">Live Inventory</h2>
+                        <p class="text-sm text-slate-500" data-i18n="table_section_sub">Sorted by FEFO (First-Expired, First-Out) logic</p>
                     </div>
                     <div
                         class="flex items-center space-x-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 text-xs">
                         <span class="w-2.5 h-2.5 bg-slate-400 rounded-full"></span>
-                        <span class="text-slate-500">Legend:</span>
-                        <span class="text-red-600 font-medium">Expired</span>
+                        <span class="text-slate-500" data-i18n="legend_label">Legend:</span>
+                        <span class="text-red-600 font-medium" data-i18n="legend_expired">Expired</span>
                         <span class="text-slate-400">•</span>
-                        <span class="text-amber-600 font-medium">Near Expiry / Low</span>
+                        <span class="text-amber-600 font-medium" data-i18n="legend_near_low">Near Expiry / Low</span>
                         <span class="text-slate-400">•</span>
-                        <span class="text-emerald-600 font-medium">Normal</span>
+                        <span class="text-emerald-600 font-medium" data-i18n="legend_normal">Normal</span>
                     </div>
                 </div>
 
@@ -412,13 +424,13 @@
                         <thead>
                             <tr
                                 class="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                <th class="px-6 py-4">Medicine Name</th>
-                                <th class="px-6 py-4">Batch Number</th>
-                                <th class="px-6 py-4 text-right">Quantity</th>
-                                <th class="px-6 py-4 text-right">Unit Price</th>
-                                <th class="px-6 py-4">Expiry Date</th>
-                                <th class="px-6 py-4">Storage Location</th>
-                                <th class="px-6 py-4">Status</th>
+                                <th class="px-6 py-4" data-i18n="th_med_name">Medicine Name</th>
+                                <th class="px-6 py-4" data-i18n="th_batch">Batch Number</th>
+                                <th class="px-6 py-4 text-right" data-i18n="th_quantity">Quantity</th>
+                                <th class="px-6 py-4 text-right" data-i18n="th_unit_price">Unit Price</th>
+                                <th class="px-6 py-4" data-i18n="th_expiry_date">Expiry Date</th>
+                                <th class="px-6 py-4" data-i18n="th_storage">Storage Location</th>
+                                <th class="px-6 py-4" data-i18n="th_status">Status</th>
                             </tr>
                         </thead>
                         <tbody id="inventory-table-body" class="divide-y divide-slate-100 text-sm">
@@ -427,7 +439,7 @@
                                 <td colspan="7" class="px-6 py-12 text-center text-slate-400">
                                     <div class="flex flex-col items-center justify-center space-y-2">
                                         <i data-lucide="refresh-cw" class="w-8 h-8 animate-spin text-sky-500"></i>
-                                        <span>Loading medical inventory...</span>
+                                        <span data-i18n="table_loading">Loading medical inventory...</span>
                                     </div>
                                 </td>
                             </tr>
@@ -444,14 +456,15 @@
                 <div class="absolute top-0 right-0 w-64 h-64 bg-sky-500/5 rounded-full filter blur-3xl"></div>
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h2 class="text-xl font-bold bg-gradient-to-r from-slate-800 to-sky-700 bg-clip-text text-transparent">
+                        <h2 class="text-xl font-bold bg-gradient-to-r from-slate-800 to-sky-700 bg-clip-text text-transparent"
+                            data-i18n="track_banner_title">
                             Live Cold Chain Transit Status
                         </h2>
-                        <p class="text-sm text-slate-600 mt-1">Real-time GPS tracking and IoT telemetry for active medicine shipments.</p>
+                        <p class="text-sm text-slate-600 mt-1" data-i18n="track_banner_sub">Real-time GPS tracking and IoT telemetry for active medicine shipments.</p>
                     </div>
                     <div class="flex items-center space-x-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-2.5 text-emerald-600">
                         <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-0.5 animate-pulse"></span>
-                        <span class="text-sm font-semibold">Active Simulation</span>
+                        <span class="text-sm font-semibold" data-i18n="track_banner_badge">Active Simulation</span>
                     </div>
                 </div>
             </div>
@@ -466,15 +479,15 @@
                             <div class="p-2.5 bg-sky-50 border border-sky-100 rounded-xl text-sky-600">
                                 <i data-lucide="truck" class="w-5 h-5"></i>
                             </div>
-                            <span class="text-[10px] uppercase tracking-widest text-slate-400 font-semibold">Shipment Status</span>
+                            <span class="text-[10px] uppercase tracking-widest text-slate-400 font-semibold" data-i18n="track_status_header">Shipment Status</span>
                         </div>
                         <div class="text-2xl font-bold text-slate-800" id="tracking-status">In Transit</div>
-                        <p class="text-xs text-slate-500 mt-1.5" id="tracking-route-info">Route: Bangkok to Nakhon Sawan</p>
+                        <p class="text-xs text-slate-500 mt-1.5" id="tracking-route-info" data-i18n="track_route_info">Route: Bangkok to Nakhon Sawan</p>
                         
                         <!-- Progress bar -->
                         <div class="mt-4">
                             <div class="flex justify-between text-xs font-semibold text-slate-500 mb-1">
-                                <span>Progress</span>
+                                <span data-i18n="track_progress_label">Progress</span>
                                 <span id="tracking-progress-pct">0%</span>
                             </div>
                             <div class="w-full bg-slate-100 rounded-full h-2">
@@ -491,10 +504,11 @@
                                 <div class="p-2 bg-rose-50 border border-rose-100 rounded-lg text-rose-500">
                                     <i data-lucide="thermometer" class="w-4 h-4"></i>
                                 </div>
-                                <span class="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">Temp</span>
+                                <span class="text-[9px] uppercase tracking-wider text-slate-400 font-semibold" data-i18n="track_temp_header">Temp</span>
                             </div>
                             <div class="text-xl font-bold text-slate-800" id="tracking-temp">4.0°C</div>
-                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 border border-emerald-100 text-emerald-700 mt-1">
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 border border-emerald-100 text-emerald-700 mt-1"
+                                data-i18n="track_temp_badge">
                                 Safe Range
                             </span>
                         </div>
@@ -505,10 +519,11 @@
                                 <div class="p-2 bg-blue-50 border border-blue-100 rounded-lg text-blue-500">
                                     <i data-lucide="droplet" class="w-4 h-4"></i>
                                 </div>
-                                <span class="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">Humidity</span>
+                                <span class="text-[9px] uppercase tracking-wider text-slate-400 font-semibold" data-i18n="track_humidity_header">Humidity</span>
                             </div>
                             <div class="text-xl font-bold text-slate-800" id="tracking-humidity">50.0%</div>
-                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 border border-emerald-100 text-emerald-700 mt-1">
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 border border-emerald-100 text-emerald-700 mt-1"
+                                data-i18n="track_humidity_badge">
                                 Optimal
                             </span>
                         </div>
@@ -520,15 +535,15 @@
                             <div class="p-2.5 bg-slate-50 border border-slate-100 rounded-xl text-slate-600">
                                 <i data-lucide="map-pin" class="w-5 h-5"></i>
                             </div>
-                            <span class="text-[10px] uppercase tracking-widest text-slate-400 font-semibold">Coordinates</span>
+                            <span class="text-[10px] uppercase tracking-widest text-slate-400 font-semibold" data-i18n="track_coords_header">Coordinates</span>
                         </div>
                         <div class="space-y-1">
                             <div class="flex justify-between text-xs text-slate-500">
-                                <span>Latitude:</span>
+                                <span data-i18n="track_lat_label">Latitude:</span>
                                 <span id="tracking-lat" class="font-mono text-slate-700">—</span>
                             </div>
                             <div class="flex justify-between text-xs text-slate-500">
-                                <span>Longitude:</span>
+                                <span data-i18n="track_lng_label">Longitude:</span>
                                 <span id="tracking-lng" class="font-mono text-slate-700">—</span>
                             </div>
                         </div>
@@ -549,7 +564,7 @@
     <!-- Footer -->
     <footer class="mt-auto border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-400">
         <div class="max-w-7xl mx-auto px-4">
-            <p>MediKeep Prototype - High School Science & Engineering Fair 2026</p>
+            <p data-i18n="footer_text">MediKeep Prototype - High School Science & Engineering Fair 2026</p>
         </div>
     </footer>
 
@@ -561,7 +576,7 @@
             <div class="flex justify-between items-center border-b border-slate-100 pb-4 mb-4">
                 <div class="flex items-center space-x-2.5 text-sky-600">
                     <i data-lucide="plus-circle" class="w-5 h-5"></i>
-                    <h3 class="text-lg font-bold text-slate-800">Add New Medicine</h3>
+                    <h3 class="text-lg font-bold text-slate-800" data-i18n="modal_title">Add New Medicine</h3>
                 </div>
                 <button id="close-modal-btn" class="text-slate-400 hover:text-slate-600 transition">
                     <i data-lucide="x" class="w-5 h-5"></i>
@@ -571,62 +586,66 @@
             <form id="add-med-form" class="space-y-4">
                 <div>
                     <label for="med-name"
-                        class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Medicine
-                        Name</label>
-                    <input type="text" id="med-name" required placeholder="e.g. Paracetamol"
+                        class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5"
+                        data-i18n="modal_label_name">Medicine Name</label>
+                    <input type="text" id="med-name" required placeholder="e.g. Paracetamol" data-i18n-placeholder="modal_ph_name"
                         class="w-full bg-slate-50 border border-slate-200 focus:outline-none focus:bg-white focus:border-sky-500 focus:ring-1 focus:ring-sky-500 rounded-xl px-4 py-2.5 text-slate-800 text-sm transition">
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label for="med-batch"
-                            class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Batch
-                            Number</label>
-                        <input type="text" id="med-batch" required placeholder="e.g. BA-991"
+                            class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5"
+                            data-i18n="modal_label_batch">Batch Number</label>
+                        <input type="text" id="med-batch" required placeholder="e.g. BA-991" data-i18n-placeholder="modal_ph_batch"
                             class="w-full bg-slate-50 border border-slate-200 focus:outline-none focus:bg-white focus:border-sky-500 focus:ring-1 focus:ring-sky-500 rounded-xl px-4 py-2.5 text-slate-800 text-sm transition">
                     </div>
                     <div>
                         <label for="med-qty"
-                            class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Quantity</label>
-                        <input type="number" id="med-qty" required min="0" placeholder="e.g. 50"
+                            class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5"
+                            data-i18n="modal_label_qty">Quantity</label>
+                        <input type="number" id="med-qty" required min="0" placeholder="e.g. 50" data-i18n-placeholder="modal_ph_qty"
                             class="w-full bg-slate-50 border border-slate-200 focus:outline-none focus:bg-white focus:border-sky-500 focus:ring-1 focus:ring-sky-500 rounded-xl px-4 py-2.5 text-slate-800 text-sm transition">
                     </div>
                 </div>
 
                 <div>
                     <label for="med-expiry"
-                        class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Expiry
-                        Date</label>
+                        class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5"
+                        data-i18n="modal_label_expiry">Expiry Date</label>
                     <input type="date" id="med-expiry" required
                         class="w-full bg-slate-50 border border-slate-200 focus:outline-none focus:bg-white focus:border-sky-500 focus:ring-1 focus:ring-sky-500 rounded-xl px-4 py-2.5 text-slate-800 text-sm transition text-slate-700">
                 </div>
 
                 <div>
                     <label for="med-storage"
-                        class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Storage
-                        Status</label>
+                        class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5"
+                        data-i18n="modal_label_storage">Storage Status</label>
                     <select id="med-storage" required
                         class="w-full bg-slate-50 border border-slate-200 focus:outline-none focus:bg-white focus:border-sky-500 focus:ring-1 focus:ring-sky-500 rounded-xl px-4 py-2.5 text-slate-800 text-sm transition">
-                        <option value="Room Temp">Room Temp</option>
-                        <option value="Refrigerator">Refrigerator</option>
-                        <option value="Freezer">Freezer</option>
+                        <option value="Room Temp" data-i18n="opt_room_temp">Room Temp</option>
+                        <option value="Refrigerator" data-i18n="opt_refrigerator">Refrigerator</option>
+                        <option value="Freezer" data-i18n="opt_freezer">Freezer</option>
                     </select>
                 </div>
 
                 <div class="mb-4">
                     <label for="med-price"
-                        class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Price per Unit (฿)</label>
-                    <input type="number" id="med-price" step="0.01" min="0" required placeholder="e.g. 12.50"
+                        class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5"
+                        data-i18n="modal_label_price">Price per Unit (฿)</label>
+                    <input type="number" id="med-price" step="0.01" min="0" required placeholder="e.g. 12.50" data-i18n-placeholder="modal_ph_price"
                         class="w-full bg-slate-50 border border-slate-200 focus:outline-none focus:bg-white focus:border-sky-500 focus:ring-1 focus:ring-sky-500 rounded-xl px-4 py-2.5 text-slate-800 text-sm transition">
                 </div>
 
                 <div class="border-t border-slate-100 pt-4 mt-6 flex justify-end space-x-3">
                     <button type="button" id="cancel-modal-btn"
-                        class="px-4 py-2 text-sm text-slate-500 hover:text-slate-800 border border-slate-200 hover:bg-slate-50 rounded-xl transition">
+                        class="px-4 py-2 text-sm text-slate-500 hover:text-slate-800 border border-slate-200 hover:bg-slate-50 rounded-xl transition"
+                        data-i18n="btn_cancel">
                         Cancel
                     </button>
                     <button type="submit"
-                        class="px-5 py-2 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-semibold text-sm rounded-xl transition duration-300 shadow-sm hover:shadow-md">
+                        class="px-5 py-2 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-semibold text-sm rounded-xl transition duration-300 shadow-sm hover:shadow-md"
+                        data-i18n="btn_save_medicine">
                         Save Medicine
                     </button>
                 </div>
