@@ -136,7 +136,7 @@ const translations = {
         stock_prefix: "Inventory for ",
         hospital_context_label: "Active Facility Scope",
         hospital_switcher_label: "Switch Hospital:",
-        hosp_a_option: "Tha Ruea Hospital",
+        hosp_a_option: "Tharuea Hospital",
         hosp_b_option: "Ruampat Hospital",
         hosp_variance_notice_title: "Stock Variance Discrepancy Notice",
         hosp_variance_notice_desc: "Morphine Injection and Epinephrine Injection are strictly OUT OF STOCK or unstocked at Ruampat Hospital (Nakhon Sawan).",
