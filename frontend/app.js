@@ -25,9 +25,9 @@ const MOCK_HOSPITALS_DATA = {
     'HOSP-A': {
         id: 'HOSP-A',
         code: 'TRH',
-        name_en: 'Tha Ruea Hospital',
+        name_en: 'Tharuea Hospital',
         name_th: 'โรงพยาบาลท่าเรือ',
-        province_en: 'Kanchanaburi Province',
+        province_en: 'Kanchanaburi',
         province_th: 'จังหวัดกาญจนบุรี',
         medicines: [
             { id: 1, hospital_id: 'HOSP-A', name: 'Paracetamol 500mg', batch_number: 'PR-2024-01', quantity: 150, price_per_unit: 1.50, expiry_date: '2026-05-10', storage_status: 'Room Temp' },
@@ -46,7 +46,7 @@ const MOCK_HOSPITALS_DATA = {
         code: 'RPH',
         name_en: 'Ruampat Hospital',
         name_th: 'โรงพยาบาลรวมแพทย์',
-        province_en: 'Nakhon Sawan Province',
+        province_en: 'Nakhon Sawan',
         province_th: 'จังหวัดนครสวรรค์',
         medicines: [
             { id: 10, hospital_id: 'HOSP-B', name: 'Paracetamol 500mg', batch_number: 'PR-2024-09', quantity: 90, price_per_unit: 1.50, expiry_date: '2026-09-12', storage_status: 'Room Temp' },
