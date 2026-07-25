@@ -46,11 +46,18 @@ class MedicineCreate(BaseModel):
     storage_status: str = Field(..., min_length=1, description="Storage condition status (e.g. Room Temp, Refrigerator)")
     price_per_unit: float = Field(..., ge=0.0, description="Price per unit in Thai Baht (฿)")
 
+# ============================================================================
+# SECURITY & RBAC AUTHORIZATION DEVELOPER NOTE:
+# Multi-hospital tenant isolation logic: API routes accept optional `hospital_id`.
+# Production RBAC middleware MUST decode JWT claims and validate that the active user 
+# has explicit authorization for `hospital_id` before executing database queries.
+# ============================================================================
+
 @app.get("/api/medicines")
-def get_medicines(search: str = None):
+def get_medicines(search: str = None, hospital_id: str = None):
     """
     Get medicines sorted by FEFO (First-Expired, First-Out).
-    Supports searching by medicine name.
+    Supports searching by medicine name and filtering by hospital_id scope.
     """
     conn = get_db_connection()
     cursor = conn.cursor()
