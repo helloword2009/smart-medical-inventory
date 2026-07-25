@@ -148,6 +148,41 @@ def init_db(hospital_id: str = "HOSP-A"):
         """, ("DATABASE_INITIALIZED", f"Initialized isolated database: {db_filename}"))
         conn.commit()
 
+    # Seed mock medicine usage history if medicine_usage table is empty
+    cursor.execute("SELECT COUNT(*) FROM medicine_usage")
+    if cursor.fetchone()[0] == 0:
+        cursor.execute("SELECT id FROM medicines LIMIT 1")
+        row = cursor.fetchone()
+        med_id = row[0] if row else 1
+
+        db_filename = get_db_filename(hospital_id)
+        if db_filename == "tha_ruea.db":
+            # Tha Ruea Hospital usage trend: [140, 210, 185, 230, 290, 310]
+            usage_seed = [
+                (med_id, 140, "2026-02-15"),
+                (med_id, 210, "2026-03-15"),
+                (med_id, 185, "2026-04-15"),
+                (med_id, 230, "2026-05-15"),
+                (med_id, 290, "2026-06-15"),
+                (med_id, 310, "2026-07-15")
+            ]
+        else:
+            # Ruampat Hospital usage trend: [65, 90, 80, 110, 130, 145]
+            usage_seed = [
+                (med_id, 65, "2026-02-15"),
+                (med_id, 90, "2026-03-15"),
+                (med_id, 80, "2026-04-15"),
+                (med_id, 110, "2026-05-15"),
+                (med_id, 130, "2026-06-15"),
+                (med_id, 145, "2026-07-15")
+            ]
+
+        cursor.executemany("""
+            INSERT INTO medicine_usage (medicine_id, quantity_used, usage_date)
+            VALUES (?, ?, ?)
+        """, usage_seed)
+        conn.commit()
+
     conn.close()
 
 def init_all_dbs():
@@ -155,6 +190,9 @@ def init_all_dbs():
     init_db("HOSP-A")
     init_db("HOSP-B")
 
+# Auto-execute database initialization on module load so tha_ruea.db and ruampat.db are created immediately
+init_all_dbs()
+
 if __name__ == "__main__":
     init_all_dbs()
-    print("All isolated hospital databases initialized successfully.")
+    print("All isolated hospital databases (tha_ruea.db & ruampat.db) initialized successfully.")
