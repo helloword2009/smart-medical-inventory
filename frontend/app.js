@@ -641,7 +641,12 @@ async function fetchDashboardSummary() {
         let summaryData = null;
 
         try {
-            const response = await fetch(`${API_BASE}/dashboard-summary?hospital_id=${encodeURIComponent(currentHospitalId)}`);
+            const response = await fetch(`${API_BASE}/dashboard-summary?hospital_id=${encodeURIComponent(currentHospitalId)}`, {
+                headers: {
+                    'X-Hospital-ID': currentHospitalId,
+                    'Hospital-Scope': currentHospitalId
+                }
+            });
             if (response.ok) {
                 summaryData = await response.json();
             }
@@ -697,7 +702,12 @@ async function fetchAlerts() {
         let alertsData = null;
 
         try {
-            const response = await fetch(`${API_BASE}/alerts?hospital_id=${encodeURIComponent(currentHospitalId)}`);
+            const response = await fetch(`${API_BASE}/alerts?hospital_id=${encodeURIComponent(currentHospitalId)}`, {
+                headers: {
+                    'X-Hospital-ID': currentHospitalId,
+                    'Hospital-Scope': currentHospitalId
+                }
+            });
             if (response.ok) {
                 const apiData = await response.json();
                 if (apiData && (apiData.expired || apiData.near_expiry || apiData.low_stock)) {
@@ -853,7 +863,12 @@ async function fetchMedicines(searchQuery = '') {
                 url += `&search=${encodeURIComponent(searchQuery)}`;
             }
 
-            const response = await fetch(url);
+            const response = await fetch(url, {
+                headers: {
+                    'X-Hospital-ID': currentHospitalId,
+                    'Hospital-Scope': currentHospitalId
+                }
+            });
             if (response.ok) {
                 const apiData = await response.json();
                 if (Array.isArray(apiData) && apiData.length > 0) {
@@ -1038,7 +1053,9 @@ if (addMedForm) {
             const response = await fetch(`${API_BASE}/medicines`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-Hospital-ID': currentHospitalId,
+                    'Hospital-Scope': currentHospitalId
                 },
                 body: JSON.stringify(newMedicine)
             });
@@ -1070,7 +1087,12 @@ if (addMedForm) {
 
 async function fetchAndRenderChart() {
     try {
-        const response = await fetch(`${API_BASE}/usage-trends`);
+        const response = await fetch(`${API_BASE}/usage-trends?hospital_id=${encodeURIComponent(currentHospitalId)}`, {
+            headers: {
+                'X-Hospital-ID': currentHospitalId,
+                'Hospital-Scope': currentHospitalId
+            }
+        });
         let data = null;
 
         if (response.ok) {
@@ -1284,7 +1306,12 @@ function startTrackingLoop() {
 
 async function fetchTrackingData() {
     try {
-        const response = await fetch('/api/tracking');
+        const response = await fetch('/api/tracking', {
+            headers: {
+                'X-Hospital-ID': currentHospitalId,
+                'Hospital-Scope': currentHospitalId
+            }
+        });
         if (!response.ok) throw new Error('Failed to fetch tracking data');
         const data = await response.json();
 

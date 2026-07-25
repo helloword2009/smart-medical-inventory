@@ -1,21 +1,62 @@
+"""
+Multi-Hospital Database Connection & Isolation Module
+Enforces strict multi-tenancy by managing separate SQLite database files (.db) for each hospital facility:
+- Hospital A (Tha Ruea): "tha_ruea.db"
+- Hospital B (Ruampat):  "ruampat.db"
+"""
+
 import sqlite3
 import os
+from typing import Generator
 
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "medical_inventory.db")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-def get_db_connection():
-    conn = sqlite3.connect(DB_PATH)
+# Map hospital identifiers (ID, Code, Name) to isolated SQLite database files
+HOSPITAL_DB_MAP = {
+    "HOSP-A": "tha_ruea.db",
+    "TRH": "tha_ruea.db",
+    "tha_ruea": "tha_ruea.db",
+    "tharuea": "tha_ruea.db",
+    "HOSP-B": "ruampat.db",
+    "RPH": "ruampat.db",
+    "ruampat": "ruampat.db",
+}
+
+def get_db_filename(hospital_id: str = "HOSP-A") -> str:
+    """Resolves the database filename for a given hospital identifier."""
+    if not hospital_id:
+        return "tha_ruea.db"
+    cleaned_id = str(hospital_id).strip()
+    return HOSPITAL_DB_MAP.get(cleaned_id, "tha_ruea.db")
+
+def get_db_path(hospital_id: str = "HOSP-A") -> str:
+    """Returns the absolute file system path for the specified hospital database."""
+    db_filename = get_db_filename(hospital_id)
+    return os.path.join(BASE_DIR, db_filename)
+
+def get_db_connection(hospital_id: str = "HOSP-A") -> sqlite3.Connection:
+    """
+    Creates and returns a raw SQLite connection for the target hospital database file.
+    Guarantees strict isolation so operations for Hospital A never touch Hospital B's .db file.
+    """
+    db_path = get_db_path(hospital_id)
+    conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     return conn
 
-def init_db():
-    conn = get_db_connection()
+def init_db(hospital_id: str = "HOSP-A"):
+    """
+    Dynamically initializes database tables and seeds mock inventory data
+    for the specified hospital's isolated .db file.
+    """
+    conn = get_db_connection(hospital_id)
     cursor = conn.cursor()
 
-    # Create the medicines table with the price_per_unit column included
+    # 1. Inventory Table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS medicines (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            hospital_id TEXT NOT NULL,
             name TEXT NOT NULL,
             batch_number TEXT NOT NULL,
             quantity INTEGER NOT NULL,
@@ -24,43 +65,8 @@ def init_db():
             price_per_unit REAL NOT NULL DEFAULT 0.0
         )
     """)
-    conn.commit()
 
-    # --- Dynamic Schema Migration ---
-    # If the database file already existed with an older schema (missing price_per_unit),
-    # we detect it via PRAGMA table_info and dynamically ALTER the table so existing
-    # user data is preserved without crashes.
-    cursor.execute("PRAGMA table_info(medicines)")
-    columns = [row[1] for row in cursor.fetchall()]  # row[1] is the column name
-
-    if "price_per_unit" not in columns:
-        cursor.execute("ALTER TABLE medicines ADD COLUMN price_per_unit REAL NOT NULL DEFAULT 0.0")
-        conn.commit()
-        print("[Migration] Added 'price_per_unit' column to existing medicines table.")
-
-    # Check if we need to seed the medicines table
-    cursor.execute("SELECT COUNT(*) FROM medicines")
-    count = cursor.fetchone()[0]
-    if count == 0:
-        # Today is 2026-06-23. Seeding dates relative to this.
-        seed_data = [
-            ("Paracetamol", "PR-2024-01", 150, "2026-05-10", "Room Temp", 1.50),
-            ("Amoxicillin", "AM-2024-05", 80, "2026-07-05", "Room Temp", 8.50),
-            ("Ibuprofen", "IB-2024-03", 60, "2026-08-15", "Room Temp", 5.00),
-            ("Insulin Glargine", "IN-2025-09", 4, "2026-11-20", "Refrigerator", 350.00),
-            ("Metformin", "MT-2024-11", 120, "2027-04-10", "Room Temp", 4.50),
-            ("Atorvastatin", "AT-2024-07", 8, "2026-07-30", "Room Temp", 12.00),
-            ("Vitamin C", "VC-2024-02", 5, "2026-06-01", "Room Temp", 3.00),
-            ("Aspirin", "AS-2025-01", 200, "2027-08-01", "Room Temp", 2.00)
-        ]
-
-        cursor.executemany("""
-            INSERT INTO medicines (name, batch_number, quantity, expiry_date, storage_status, price_per_unit)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, seed_data)
-        conn.commit()
-
-    # Create the medicine_usage table if it does not exist using a proper Relational Foreign Key
+    # 2. Medicine Usage / FEFO Consumption Table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS medicine_usage (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -70,34 +76,85 @@ def init_db():
             FOREIGN KEY (medicine_id) REFERENCES medicines (id) ON DELETE CASCADE
         )
     """)
+
+    # 3. Cold Chain Logistics Table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS logistics_shipments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tracking_number TEXT NOT NULL UNIQUE,
+            origin TEXT NOT NULL,
+            destination TEXT NOT NULL,
+            status TEXT NOT NULL,
+            temperature REAL NOT NULL,
+            humidity REAL NOT NULL,
+            progress INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL
+        )
+    """)
+
+    # 4. Audit Log Table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS audit_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            action TEXT NOT NULL,
+            details TEXT NOT NULL,
+            timestamp TEXT NOT NULL
+        )
+    """)
     conn.commit()
 
-    # Check if we need to seed the medicine_usage table
-    cursor.execute("SELECT COUNT(*) FROM medicine_usage")
-    usage_count = cursor.fetchone()[0]
-    if usage_count == 0:
-        cursor.execute("SELECT id FROM medicines LIMIT 1")
-        row = cursor.fetchone()
-        if row:
-            med_id = row[0]
-            # Seed usage data representing total medicine items consumed over the last 6 months relative to today (June 2026)
-            # Jan: 120, Feb: 185, Mar: 140, Apr: 210, May: 175, Jun: 240
-            usage_seed = [
-                (med_id, 120, "2026-01-15"),
-                (med_id, 185, "2026-02-15"),
-                (med_id, 140, "2026-03-15"),
-                (med_id, 210, "2026-04-15"),
-                (med_id, 175, "2026-05-15"),
-                (med_id, 240, "2026-06-15")
+    # Seed mock inventory if medicines table is empty
+    cursor.execute("SELECT COUNT(*) FROM medicines")
+    if cursor.fetchone()[0] == 0:
+        db_filename = get_db_filename(hospital_id)
+        hosp_code = "HOSP-A" if db_filename == "tha_ruea.db" else "HOSP-B"
+
+        if db_filename == "tha_ruea.db":
+            # Tha Ruea Hospital (Hospital A): Full stock including Morphine & Epinephrine
+            seed_data = [
+                (hosp_code, "Paracetamol 500mg", "PR-2024-01", 150, "2026-05-10", "Room Temp", 1.50),
+                (hosp_code, "Amoxicillin 250mg", "AM-2024-05", 80, "2026-07-05", "Room Temp", 8.50),
+                (hosp_code, "Ibuprofen 400mg", "IB-2024-03", 60, "2026-08-15", "Room Temp", 5.00),
+                (hosp_code, "Insulin Glargine 100U/mL", "IN-2025-09", 25, "2026-11-20", "Refrigerator", 350.00),
+                (hosp_code, "Morphine Injection 10mg/mL", "MP-2025-02", 45, "2027-03-15", "Refrigerator", 120.00),
+                (hosp_code, "Epinephrine Injection 1mg/mL", "EP-2025-04", 30, "2026-12-10", "Refrigerator", 95.00),
+                (hosp_code, "Metformin 500mg", "MT-2024-11", 120, "2027-04-10", "Room Temp", 4.50),
+                (hosp_code, "Atorvastatin 20mg", "AT-2024-07", 8, "2026-07-30", "Room Temp", 12.00),
+                (hosp_code, "Vitamin C 500mg", "VC-2024-02", 5, "2026-06-01", "Room Temp", 3.00)
             ]
-            cursor.executemany("""
-                INSERT INTO medicine_usage (medicine_id, quantity_used, usage_date)
-                VALUES (?, ?, ?)
-            """, usage_seed)
-            conn.commit()
+        else:
+            # Ruampat Hospital (Hospital B): Morphine & Epinephrine Out of Stock (0 qty)
+            seed_data = [
+                (hosp_code, "Paracetamol 500mg", "PR-2024-09", 90, "2026-09-12", "Room Temp", 1.50),
+                (hosp_code, "Amoxicillin 250mg", "AM-2024-12", 35, "2026-10-01", "Room Temp", 8.50),
+                (hosp_code, "Ibuprofen 400mg", "IB-2024-08", 40, "2027-01-20", "Room Temp", 5.00),
+                (hosp_code, "Insulin Glargine 100U/mL", "IN-2025-11", 6, "2026-08-25", "Refrigerator", 350.00),
+                (hosp_code, "Morphine Injection 10mg/mL", "MP-OUT-01", 0, "2026-01-01", "Refrigerator", 120.00),
+                (hosp_code, "Epinephrine Injection 1mg/mL", "EP-OUT-01", 0, "2026-01-01", "Refrigerator", 95.00),
+                (hosp_code, "Aspirin 81mg", "AS-2025-01", 110, "2027-08-01", "Room Temp", 2.00),
+                (hosp_code, "Salbutamol Inhaler 100mcg", "SB-2025-03", 15, "2026-12-05", "Room Temp", 180.00)
+            ]
+
+        cursor.executemany("""
+            INSERT INTO medicines (hospital_id, name, batch_number, quantity, expiry_date, storage_status, price_per_unit)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, seed_data)
+        conn.commit()
+
+        # Write audit log entry for initialization
+        cursor.execute("""
+            INSERT INTO audit_logs (action, details, timestamp)
+            VALUES (?, ?, DATETIME('now'))
+        """, ("DATABASE_INITIALIZED", f"Initialized isolated database: {db_filename}"))
+        conn.commit()
 
     conn.close()
 
+def init_all_dbs():
+    """Initializes both tha_ruea.db and ruampat.db upon backend application startup."""
+    init_db("HOSP-A")
+    init_db("HOSP-B")
+
 if __name__ == "__main__":
-    init_db()
-    print("Database initialized successfully at:", DB_PATH)
+    init_all_dbs()
+    print("All isolated hospital databases initialized successfully.")
