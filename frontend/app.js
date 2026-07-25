@@ -25,8 +25,10 @@ const MOCK_HOSPITALS_DATA = {
     'HOSP-A': {
         id: 'HOSP-A',
         code: 'TRH',
-        name: 'Tha Ruea Hospital',
-        province: 'Kanchanaburi',
+        name_en: 'Tha Ruea Hospital',
+        name_th: 'โรงพยาบาลท่าเรือ',
+        province_en: 'Kanchanaburi Province',
+        province_th: 'จังหวัดกาญจนบุรี',
         medicines: [
             { id: 1, hospital_id: 'HOSP-A', name: 'Paracetamol 500mg', batch_number: 'PR-2024-01', quantity: 150, price_per_unit: 1.50, expiry_date: '2026-05-10', storage_status: 'Room Temp' },
             { id: 2, hospital_id: 'HOSP-A', name: 'Amoxicillin 250mg', batch_number: 'AM-2024-05', quantity: 80, price_per_unit: 8.50, expiry_date: '2026-07-05', storage_status: 'Room Temp' },
@@ -42,8 +44,10 @@ const MOCK_HOSPITALS_DATA = {
     'HOSP-B': {
         id: 'HOSP-B',
         code: 'RPH',
-        name: 'Ruampat Hospital',
-        province: 'Nakhon Sawan',
+        name_en: 'Ruampat Hospital',
+        name_th: 'โรงพยาบาลรวมแพทย์',
+        province_en: 'Nakhon Sawan Province',
+        province_th: 'จังหวัดนครสวรรค์',
         medicines: [
             { id: 10, hospital_id: 'HOSP-B', name: 'Paracetamol 500mg', batch_number: 'PR-2024-09', quantity: 90, price_per_unit: 1.50, expiry_date: '2026-09-12', storage_status: 'Room Temp' },
             { id: 11, hospital_id: 'HOSP-B', name: 'Amoxicillin 250mg', batch_number: 'AM-2024-12', quantity: 35, price_per_unit: 8.50, expiry_date: '2026-10-01', storage_status: 'Room Temp' },
@@ -129,9 +133,10 @@ const translations = {
         active_view_prefix: "Active View:",
         
         // Hospital Switcher
+        stock_prefix: "Inventory for ",
         hospital_context_label: "Active Facility Scope",
         hospital_switcher_label: "Switch Hospital:",
-        hosp_a_option: "Tharuea Hospital",
+        hosp_a_option: "Tha Ruea Hospital",
         hosp_b_option: "Ruampat Hospital",
         hosp_variance_notice_title: "Stock Variance Discrepancy Notice",
         hosp_variance_notice_desc: "Morphine Injection and Epinephrine Injection are strictly OUT OF STOCK or unstocked at Ruampat Hospital (Nakhon Sawan).",
@@ -260,8 +265,6 @@ const translations = {
         btn_cancel: "Cancel",
         btn_save_medicine: "Save Medicine",
 
-        // Footer
-        footer_text: "MediKeep Prototype - High School Science & Engineering Fair 2026"
     },
     th: {
         nav_subtitle: "ระบบคลังเวชภัณฑ์อัจฉริยะ",
@@ -272,6 +275,7 @@ const translations = {
         active_view_prefix: "มุมมองปัจจุบัน:",
 
         // Hospital Switcher
+        stock_prefix: "สต๊อกของ ",
         hospital_context_label: "ขอบเขตสถานพยาบาลที่ใช้งาน",
         hospital_switcher_label: "สลับโรงพยาบาล:",
         hosp_a_option: "โรงพยาบาลท่าเรือ",
@@ -403,8 +407,6 @@ const translations = {
         btn_cancel: "ยกเลิก",
         btn_save_medicine: "บันทึกรายการยา",
 
-        // Footer
-        footer_text: "MediKeep Prototype - งานประกวดโครงงานวิทยาศาสตร์และวิศวกรรมศาสตร์ 2026"
     }
 };
 
@@ -517,12 +519,17 @@ function setHospital(hospitalId) {
     const discBannerEl = document.getElementById('hospital-discrepancy-banner');
 
     const hospInfo = MOCK_HOSPITALS_DATA[currentHospitalId];
+    const isTh = currentLang === 'TH';
+
+    const hospitalName = isTh ? hospInfo.name_th : hospInfo.name_en;
+    const hospitalProvince = isTh ? hospInfo.province_th : hospInfo.province_en;
+    const prefix = t('stock_prefix');
 
     if (activeHospNameEl) {
-        activeHospNameEl.textContent = `สต๊อกของ ${hospInfo.name}`;
+        activeHospNameEl.textContent = `${prefix}${hospitalName}`;
     }
     if (activeHospProvinceEl) {
-        activeHospProvinceEl.textContent = hospInfo.province;
+        activeHospProvinceEl.textContent = hospitalProvince;
     }
     if (hospBadgeEl) {
         hospBadgeEl.textContent = hospInfo.code;
