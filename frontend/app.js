@@ -24,16 +24,16 @@ const API_BASE = 'https://smart-medical-inventory.onrender.com/api';
 const MOCK_HOSPITALS_DATA = {
     'HOSP-A': {
         id: 'HOSP-A',
-        code: 'CGH',
-        name: 'Central General Hospital',
-        name_th: 'โรงพยาบาลศูนย์กลางทั่วไป',
+        code: 'TRH',
+        name: 'Tha Ruea Hospital',
+        province: 'Kanchanaburi',
         medicines: [
             { id: 1, hospital_id: 'HOSP-A', name: 'Paracetamol 500mg', batch_number: 'PR-2024-01', quantity: 150, price_per_unit: 1.50, expiry_date: '2026-05-10', storage_status: 'Room Temp' },
             { id: 2, hospital_id: 'HOSP-A', name: 'Amoxicillin 250mg', batch_number: 'AM-2024-05', quantity: 80, price_per_unit: 8.50, expiry_date: '2026-07-05', storage_status: 'Room Temp' },
             { id: 3, hospital_id: 'HOSP-A', name: 'Ibuprofen 400mg', batch_number: 'IB-2024-03', quantity: 60, price_per_unit: 5.00, expiry_date: '2026-08-15', storage_status: 'Room Temp' },
             { id: 4, hospital_id: 'HOSP-A', name: 'Insulin Glargine 100U/mL', batch_number: 'IN-2025-09', quantity: 25, price_per_unit: 350.00, expiry_date: '2026-11-20', storage_status: 'Refrigerator' },
-            { id: 5, hospital_id: 'HOSP-A', name: 'Morphine Injection 10mg/mL', batch_number: 'MP-2025-02', quantity: 45, price_per_unit: 120.00, expiry_date: '2027-03-15', storage_status: 'Refrigerator' }, // Stocked in Hospital A
-            { id: 6, hospital_id: 'HOSP-A', name: 'Epinephrine Injection 1mg/mL', batch_number: 'EP-2025-04', quantity: 30, price_per_unit: 95.00, expiry_date: '2026-12-10', storage_status: 'Refrigerator' }, // Stocked in Hospital A
+            { id: 5, hospital_id: 'HOSP-A', name: 'Morphine Injection 10mg/mL', batch_number: 'MP-2025-02', quantity: 45, price_per_unit: 120.00, expiry_date: '2027-03-15', storage_status: 'Refrigerator' },
+            { id: 6, hospital_id: 'HOSP-A', name: 'Epinephrine Injection 1mg/mL', batch_number: 'EP-2025-04', quantity: 30, price_per_unit: 95.00, expiry_date: '2026-12-10', storage_status: 'Refrigerator' },
             { id: 7, hospital_id: 'HOSP-A', name: 'Metformin 500mg', batch_number: 'MT-2024-11', quantity: 120, price_per_unit: 4.50, expiry_date: '2027-04-10', storage_status: 'Room Temp' },
             { id: 8, hospital_id: 'HOSP-A', name: 'Atorvastatin 20mg', batch_number: 'AT-2024-07', quantity: 8, price_per_unit: 12.00, expiry_date: '2026-07-30', storage_status: 'Room Temp' },
             { id: 9, hospital_id: 'HOSP-A', name: 'Vitamin C 500mg', batch_number: 'VC-2024-02', quantity: 5, price_per_unit: 3.00, expiry_date: '2026-06-01', storage_status: 'Room Temp' }
@@ -41,16 +41,16 @@ const MOCK_HOSPITALS_DATA = {
     },
     'HOSP-B': {
         id: 'HOSP-B',
-        code: 'SJCH',
-        name: 'St. Jude Community Hospital',
-        name_th: 'โรงพยาบาลชุมชนเซนต์จูด',
+        code: 'RPH',
+        name: 'Ruampat Hospital',
+        province: 'Nakhon Sawan',
         medicines: [
             { id: 10, hospital_id: 'HOSP-B', name: 'Paracetamol 500mg', batch_number: 'PR-2024-09', quantity: 90, price_per_unit: 1.50, expiry_date: '2026-09-12', storage_status: 'Room Temp' },
             { id: 11, hospital_id: 'HOSP-B', name: 'Amoxicillin 250mg', batch_number: 'AM-2024-12', quantity: 35, price_per_unit: 8.50, expiry_date: '2026-10-01', storage_status: 'Room Temp' },
             { id: 12, hospital_id: 'HOSP-B', name: 'Ibuprofen 400mg', batch_number: 'IB-2024-08', quantity: 40, price_per_unit: 5.00, expiry_date: '2027-01-20', storage_status: 'Room Temp' },
             { id: 13, hospital_id: 'HOSP-B', name: 'Insulin Glargine 100U/mL', batch_number: 'IN-2025-11', quantity: 6, price_per_unit: 350.00, expiry_date: '2026-08-25', storage_status: 'Refrigerator' },
-            { id: 14, hospital_id: 'HOSP-B', name: 'Morphine Injection 10mg/mL', batch_number: 'MP-OUT-01', quantity: 0, price_per_unit: 120.00, expiry_date: '2026-01-01', storage_status: 'Refrigerator' }, // Strictly OUT OF STOCK (Qty: 0)
-            { id: 15, hospital_id: 'HOSP-B', name: 'Epinephrine Injection 1mg/mL', batch_number: 'EP-OUT-01', quantity: 0, price_per_unit: 95.00, expiry_date: '2026-01-01', storage_status: 'Refrigerator' }, // Strictly OUT OF STOCK (Qty: 0)
+            { id: 14, hospital_id: 'HOSP-B', name: 'Morphine Injection 10mg/mL', batch_number: 'MP-OUT-01', quantity: 0, price_per_unit: 120.00, expiry_date: '2026-01-01', storage_status: 'Refrigerator' },
+            { id: 15, hospital_id: 'HOSP-B', name: 'Epinephrine Injection 1mg/mL', batch_number: 'EP-OUT-01', quantity: 0, price_per_unit: 95.00, expiry_date: '2026-01-01', storage_status: 'Refrigerator' },
             { id: 16, hospital_id: 'HOSP-B', name: 'Aspirin 81mg', batch_number: 'AS-2025-01', quantity: 110, price_per_unit: 2.00, expiry_date: '2027-08-01', storage_status: 'Room Temp' },
             { id: 17, hospital_id: 'HOSP-B', name: 'Salbutamol Inhaler 100mcg', batch_number: 'SB-2025-03', quantity: 15, price_per_unit: 180.00, expiry_date: '2026-12-05', storage_status: 'Room Temp' }
         ]
@@ -130,12 +130,11 @@ const translations = {
         
         // Hospital Switcher
         hospital_context_label: "Active Facility Scope",
-        hospital_isolation_note: "Data isolation active • Isolated multi-location scope filter",
         hospital_switcher_label: "Switch Hospital:",
-        hosp_a_option: "🏥 Central General Hospital (Hospital A)",
-        hosp_b_option: "🏥 St. Jude Community Hospital (Hospital B)",
+        hosp_a_option: "Tha Ruea Hospital",
+        hosp_b_option: "Ruampat Hospital",
         hosp_variance_notice_title: "Stock Variance Discrepancy Notice",
-        hosp_variance_notice_desc: "Morphine Injection and Epinephrine Injection are strictly OUT OF STOCK or unstocked at St. Jude Community Hospital (Hospital B), demonstrating multi-location supply chain variance.",
+        hosp_variance_notice_desc: "Morphine Injection and Epinephrine Injection are strictly OUT OF STOCK or unstocked at Ruampat Hospital (Nakhon Sawan).",
 
         // Dashboard
         dash_banner_title: "System Insights & Analytics",
@@ -274,12 +273,11 @@ const translations = {
 
         // Hospital Switcher
         hospital_context_label: "ขอบเขตสถานพยาบาลที่ใช้งาน",
-        hospital_isolation_note: "แยกข้อมูลตามโรงพยาบาล • การกรองขอบเขตหลายพื้นที่อย่างปลอดภัย",
         hospital_switcher_label: "สลับโรงพยาบาล:",
-        hosp_a_option: "🏥 โรงพยาบาลศูนย์กลางทั่วไป (Hospital A)",
-        hosp_b_option: "🏥 โรงพยาบาลชุมชนเซนต์จูด (Hospital B)",
+        hosp_a_option: "โรงพยาบาลท่าเรือ",
+        hosp_b_option: "โรงพยาบาลรวมแพทย์",
         hosp_variance_notice_title: "การแจ้งเตือนความแตกต่างของสต็อกตามสถานที่",
-        hosp_variance_notice_desc: "Morphine Injection และ Epinephrine Injection ไม่มีในสต็อกหรือไม่มีรายการจัดเก็บที่โรงพยาบาลชุมชนเซนต์จูด (Hospital B) เพื่อแสดงความแตกต่างของสต็อกตามสถานที่",
+        hosp_variance_notice_desc: "Morphine Injection และ Epinephrine Injection ไม่มีในสต็อกหรือไม่มีรายการจัดเก็บที่โรงพยาบาลรวมแพทย์ (นครสวรรค์)",
 
         // Dashboard
         dash_banner_title: "ข้อมูลเชิงลึกและสถิติระบบ",
@@ -514,13 +512,17 @@ function setHospital(hospitalId) {
     }
 
     const activeHospNameEl = document.getElementById('active-hospital-name');
+    const activeHospProvinceEl = document.getElementById('active-hospital-province');
     const hospBadgeEl = document.getElementById('hospital-badge');
     const discBannerEl = document.getElementById('hospital-discrepancy-banner');
 
     const hospInfo = MOCK_HOSPITALS_DATA[currentHospitalId];
 
     if (activeHospNameEl) {
-        activeHospNameEl.textContent = currentLang === 'TH' ? hospInfo.name_th : hospInfo.name;
+        activeHospNameEl.textContent = `สต๊อกของ ${hospInfo.name}`;
+    }
+    if (activeHospProvinceEl) {
+        activeHospProvinceEl.textContent = hospInfo.province;
     }
     if (hospBadgeEl) {
         hospBadgeEl.textContent = hospInfo.code;
